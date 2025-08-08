@@ -14,6 +14,17 @@ GLfloat Vertices_Tri[] = {
 	-0.5f, 0.8f, 0.0f,	0.0f, 1.0f, 0.0f,	// Top Left
 	0.5f, 0.8f, 0.0f,	0.0f, 0.0f, 1.0f,	// Bottom Center
 };
+GLfloat Vertices_Quad[] = {
+	// Position         // Color
+	// First triangle
+	 0.0f, 0.8f, 0.0f,  1.0f, 0.0f, 0.0f,	// Top 
+	 -0.8f, 0.0f, 0.0f,	0.0f, 1.0f, 0.0f,	// Left
+	 0.8f, 0.0f, 0.0f,	0.0f, 0.0f, 1.0f,	// Right
+	 // Second triangle
+	 -0.8f, 0.0f, 0.0f,	0.0f, 1.0f, 0.0f,	// Left
+	 0.8f, 0.0f, 0.0f,	0.0f, 0.0f, 1.0f,	// Right
+	 0.0f, -0.8f, 0.0f,	1.0f, 1.0f, 1.0f	// Bottom
+};
 
 int main()
 {
@@ -86,7 +97,8 @@ void Render(Program* _program, float* _currentTime)
 	glUniform1f(CurrentTimeLoc, *_currentTime);
 	
 	// Render
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glDrawArrays(GL_TRIANGLES, 0, 3); //Triangle
+	glDrawArrays(GL_TRIANGLES, 0, 6); //Quad
 	
 	//Unbind the VAO and program to prevent accidental modifications
 	glBindVertexArray(0);
@@ -119,7 +131,10 @@ void InitialSetup(Program* _program)
 	//Generate VBO for a triangle
 	glGenBuffers(1, &_program->VBO_Tri);
 	glBindBuffer(GL_ARRAY_BUFFER, _program->VBO_Tri);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW); //Triangle
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
+
+
 
 	// Set the vertex attribute pointers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
