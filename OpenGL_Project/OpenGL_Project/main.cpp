@@ -9,10 +9,10 @@ void Render(Program* _program);
 
 // Vertices / Indices
 GLfloat Vertices_Tri[] = {
-	// position
-	0.0f, 0.0f, 0.0f,
-	-0.5f, 0.8f, 0.0f,
-	0.5f, 0.8f, 0.0f,
+	// Position			// Color
+	0.0f, 0.0f, 0.0f,	1.0f, 0.0f, 0.0f,	// Top Right
+	-0.5f, 0.8f, 0.0f,	0.0f, 1.0f, 0.0f,	// Top Left
+	0.5f, 0.8f, 0.0f,	0.0f, 0.0f, 1.0f,	// Bottom Center
 };
 
 int main()
@@ -89,8 +89,9 @@ void Render(Program* _program)
 
 void InitialSetup(Program* _program)
 {
-	// Set the clear color to blue
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	// Set the clear color
+	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f); //blue
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //black
 
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, 800, 800);
@@ -99,7 +100,7 @@ void InitialSetup(Program* _program)
 	_program->Program_FixedTri = ShaderLoader::CreateProgram("Resources/Shaders/FixedTriangle.vert", 
 															"Resources/Shaders/FixedColor.frag");
 	_program->Program_PositionOnly = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert", 
-																"Resources/Shaders/FixedColor.frag");
+																"Resources/Shaders/VertexColor.frag");
     
 	// Generate VAO for the triangle
 	glGenVertexArrays(1, &_program->VAO_Tri);
@@ -111,8 +112,10 @@ void InitialSetup(Program* _program)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW);
 
 	// Set the vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
 
 
 }
