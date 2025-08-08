@@ -7,7 +7,7 @@ void InitialSetup(Program* _program);
 void Update(float* _currentTime);
 void Render(Program* _program, float* _currentTime);
 
-// Vertices / Indices
+// Vertices / Indices --------------------------
 GLfloat Vertices_Tri[] = {
 	// Position			// Color
 	0.0f, 0.0f, 0.0f,	1.0f, 0.0f, 0.0f,	// Top Right
@@ -17,14 +17,26 @@ GLfloat Vertices_Tri[] = {
 GLfloat Vertices_Quad[] = {
 	// Position         // Color
 	// First triangle
-	 0.0f, 0.8f, 0.0f,  1.0f, 0.0f, 0.0f,	// Top 
-	 -0.8f, 0.0f, 0.0f,	0.0f, 1.0f, 0.0f,	// Left
-	 0.8f, 0.0f, 0.0f,	0.0f, 0.0f, 1.0f,	// Right
+	 0.5f, 1.0f, 0.0f,  1.0f, 0.0f, 0.0f,	// Top 
+	 0.0f, 0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	// Left
+	 1.0f, 0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	// Right
 	 // Second triangle
-	 -0.8f, 0.0f, 0.0f,	0.0f, 1.0f, 0.0f,	// Left
-	 0.8f, 0.0f, 0.0f,	0.0f, 0.0f, 1.0f,	// Right
-	 0.0f, -0.8f, 0.0f,	1.0f, 1.0f, 1.0f	// Bottom
+	 0.0f, 0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	// Left
+	 1.0f, 0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	// Right
+	 0.5f, 0.0f, 0.0f,	1.0f, 1.0f, 1.0f,	// Bottom
 };
+GLfloat Vertrices_Quad2[] = {
+	// Position         // Color
+	// First triangle
+	 -0.5f, 0.0f, 0.0f, 1.0f, 0.8f, 0.0f,	// Top 
+	 -1.0f,-0.5f, 0.0f,	1.0f, 0.3f, 0.0f,	// Left
+	 0.0f, -0.5f, 0.0f,	1.0f, 0.3f, 0.0f,	// Right
+	 // Second triangle
+	 -1.0f,-0.5f, 0.0f,	1.0f, 0.3f, 0.0f,	// Left
+	 0.0f, -0.5f, 0.0f,	1.0f, 0.3f, 0.0f,	// Right
+	 -0.5f, -1.0f, 0.0f,1.0f, 0.8f, 0.0f,	// Bottom
+};
+//--------------------------------------------------
 
 int main()
 {
@@ -99,6 +111,10 @@ void Render(Program* _program, float* _currentTime)
 	// Render
 	//glDrawArrays(GL_TRIANGLES, 0, 3); //Triangle
 	glDrawArrays(GL_TRIANGLES, 0, 6); //Quad
+
+	//2nd quad
+	glBindVertexArray(_program->VAO_Tri2);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 	
 	//Unbind the VAO and program to prevent accidental modifications
 	glBindVertexArray(0);
@@ -134,14 +150,28 @@ void InitialSetup(Program* _program)
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW); //Triangle
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
 
-
-
 	// Set the vertex attribute pointers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
+	glBindVertexArray(0);
 
+	//----------------------------------
+	// 2nd quad
+	glGenVertexArrays(1, &_program->VAO_Tri2);
+	glBindVertexArray(_program->VAO_Tri2);
+
+	glGenBuffers(1, &_program->VAO_Tri2);
+	glBindBuffer(GL_ARRAY_BUFFER, _program->VAO_Tri2);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertrices_Quad2), Vertrices_Quad2, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
 
 }
 

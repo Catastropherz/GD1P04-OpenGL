@@ -9,6 +9,8 @@ public:
 	GLuint Program_ColorFade = 0;
     GLuint VBO_Tri = 0;
     GLuint VAO_Tri = 0;
+    GLuint VBO_Tri2 = 0;
+    GLuint VAO_Tri2 = 0;
 
     Program();
     ~Program();
