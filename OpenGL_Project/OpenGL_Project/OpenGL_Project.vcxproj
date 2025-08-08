@@ -142,6 +142,7 @@
     <None Include="Resources\Shaders\FixedTriangle.vert" />
     <None Include="Resources\Shaders\PositionOnly.vert" />
     <None Include="Resources\Shaders\VertexColor.frag" />
+    <None Include="Resources\Shaders\VertexColorFade.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Program.h" />

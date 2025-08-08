@@ -4,8 +4,8 @@
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Program* _program);
-void Update();
-void Render(Program* _program);
+void Update(float* _currentTime);
+void Render(Program* _program, float* _currentTime);
 
 // Vertices / Indices
 GLfloat Vertices_Tri[] = {
@@ -25,6 +25,7 @@ int main()
 
 	//Create the program
 	Program program;
+	float CurrentTime = 0.0f;
 
 	// Create an GLFW control window
 	Window = glfwCreateWindow(800, 800, "First OpenGL Window", NULL, NULL);
@@ -55,10 +56,10 @@ int main()
 	while (glfwWindowShouldClose(Window) == false)
 	{
 		//Update all objects and run the processes
-		Update();
+		Update(&CurrentTime);
 
 		// Render all objects
-		Render(&program);
+		Render(&program, &CurrentTime);
 	}
 	// End of Main Loop ****************************************
 
@@ -68,19 +69,26 @@ int main()
 	return 0;
 }
 
-void Render(Program* _program)
+void Render(Program* _program, float* _currentTime)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	//Fixed triangle
+	// Bind the Program
 	//glUseProgram(_program->Program_FixedTri);
-	//glDrawArrays(GL_TRIANGLES, 0, 3);
-	//glUseProgram(0);
-
-	//Position only triangle
-	glUseProgram(_program->Program_PositionOnly);
+	//glUseProgram(_program->Program_PositionOnly);
+	glUseProgram(_program->Program_ColorFade);
+	
+	// Bind the VAO for the triangle
 	glBindVertexArray(_program->VAO_Tri);
+	
+	// Send variables to the shaders via Uniform
+	GLint CurrentTimeLoc = glGetUniformLocation(_program->Program_ColorFade, "CurrentTime");
+	glUniform1f(CurrentTimeLoc, *_currentTime);
+	
+	// Render
 	glDrawArrays(GL_TRIANGLES, 0, 3);
+	
+	//Unbind the VAO and program to prevent accidental modifications
 	glBindVertexArray(0);
 	glUseProgram(0);
 
@@ -101,6 +109,8 @@ void InitialSetup(Program* _program)
 															"Resources/Shaders/FixedColor.frag");
 	_program->Program_PositionOnly = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert", 
 																"Resources/Shaders/VertexColor.frag");
+	_program->Program_ColorFade = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert",
+																"Resources/Shaders/VertexColorFade.frag");
     
 	// Generate VAO for the triangle
 	glGenVertexArrays(1, &_program->VAO_Tri);
@@ -120,13 +130,17 @@ void InitialSetup(Program* _program)
 
 }
 
-void Update()
+void Update(float* _currentTime)
 {
 	// Check for any events like key presses or mouse movements
 	glfwPollEvents();
+	
 	// Check if the user has requested to close the window
 	if (glfwWindowShouldClose(Window))
 	{
 		glfwSetWindowShouldClose(Window, true);
 	}
+
+	// Get time
+	*_currentTime = (float)glfwGetTime();
 }
