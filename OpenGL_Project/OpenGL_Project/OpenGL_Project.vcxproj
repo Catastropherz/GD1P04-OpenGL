@@ -143,6 +143,7 @@
     <None Include="Resources\Shaders\PositionOnly.vert" />
     <None Include="Resources\Shaders\VertexColor.frag" />
     <None Include="Resources\Shaders\VertexColorFade.frag" />
+    <None Include="Resources\Shaders\WorldSpace.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Program.h" />

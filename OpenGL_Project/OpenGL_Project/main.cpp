@@ -28,6 +28,15 @@ GLuint Indices_Quad[] = {
 	0, 1, 2, // First Triangle (TL > BL > BR)
 	0, 2, 3, // Second Triangle (TL > BR > TR)
 };
+
+// Object Matrices and Components -------------------
+glm::vec3 QuadPosition = glm::vec3(-0.5f, -0.5f, 0.0f);
+glm::mat4 TranslationMat;
+float QuadRotationAngle = 180.0f; // Degrees
+glm::mat4 RotationMat;
+glm::vec3 QuadScale = glm::vec3(0.5f, 2.0f, 1.0f);
+glm::mat4 ScaleMat;
+
 //--------------------------------------------------
 
 int main()
@@ -89,17 +98,24 @@ void Render(Program* _program, float* _currentTime)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	// Program to use
+	GLuint ProgramToUse = _program->Program_WorldSpace;
+
 	// Bind the Program
-	//glUseProgram(_program->Program_FixedTri);
-	//glUseProgram(_program->Program_PositionOnly);
-	glUseProgram(_program->Program_ColorFade);
+	glUseProgram(ProgramToUse);
 	
 	// Bind the VAO for the triangle
 	glBindVertexArray(_program->VAO_Tri);
 	
 	// Send variables to the shaders via Uniform
-	GLint CurrentTimeLoc = glGetUniformLocation(_program->Program_ColorFade, "CurrentTime");
+	GLint CurrentTimeLoc = glGetUniformLocation(ProgramToUse, "CurrentTime");
 	glUniform1f(CurrentTimeLoc, *_currentTime);
+	GLint TranslationMatLoc = glGetUniformLocation(ProgramToUse, "TranslationMat");
+	glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMat));
+	GLint RotationMatLoc = glGetUniformLocation(ProgramToUse, "RotationMat");
+	glUniformMatrix4fv(RotationMatLoc, 1, GL_FALSE, glm::value_ptr(RotationMat));
+	GLint ScaleMatLoc = glGetUniformLocation(ProgramToUse, "ScaleMat");
+	glUniformMatrix4fv(ScaleMatLoc, 1, GL_FALSE, glm::value_ptr(ScaleMat));
 	
 	// Render
 	//glDrawArrays(GL_TRIANGLES, 0, 3); //Triangle
@@ -128,6 +144,8 @@ void InitialSetup(Program* _program)
 	_program->Program_PositionOnly = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert", 
 																"Resources/Shaders/VertexColor.frag");
 	_program->Program_ColorFade = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert",
+																"Resources/Shaders/VertexColorFade.frag");
+	_program->Program_WorldSpace = ShaderLoader::CreateProgram("Resources/Shaders/WorldSpace.vert",
 																"Resources/Shaders/VertexColorFade.frag");
     
 	// Generate VAO
@@ -160,4 +178,9 @@ void Update(float* _currentTime)
 
 	// Get time
 	*_currentTime = (float)glfwGetTime();
+
+	// Calculate the Model Matrix
+	TranslationMat = glm::translate(glm::mat4(1.0f), QuadPosition);
+	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	ScaleMat = glm::scale(glm::mat4(1.0f), QuadScale);
 }
