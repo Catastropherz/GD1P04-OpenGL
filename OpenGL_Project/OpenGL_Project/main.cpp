@@ -29,12 +29,31 @@ GLuint Indices_Quad[] = {
 	0, 2, 3, // Second Triangle (TL > BR > TR)
 };
 
+GLfloat Vertices_Hex[] = {
+	// Index	// Position				// Color
+	/*0*/		-0.5f, 0.866f, 0.0f,	1.0f, 0.0f, 0.0f,	// Top Left
+	/*1*/		-1.0f, 0.0f, 0.0f,		0.0f, 1.0f, 0.0f,	// Left
+	/*2*/		0.0f, 0.0f, 0.0f,		1.0f, 1.0f, 1.0f,	// Center
+	/*3*/		-0.5f, -0.866f, 0.0f,	0.0f, 0.0f, 1.0f,	// Bottom Left
+	/*4*/		0.5f, -0.866f, 0.0f,	1.0f, 1.0f, 0.0f,	// Bottom Right
+	/*5*/		1.0f, 0.0f, 0.0f,		1.0f, 0.5f, 0.5f,	// Right
+	/*6*/		0.5f, 0.866f, 0.0f,		0.5f, 0.5f, 1.0f,	// Top Right
+};
+GLuint Indices_Hex[] = {
+	0, 1, 2, // First Triangle (TL > L > C)
+	1, 3, 2, // Second Triangle (L > BL > C)
+	3, 4, 2, // Third Triangle (BL > BR > C)
+	4, 5, 2, // Fourth Triangle (BR > R > C)
+	5, 6, 2, // Fifth Triangle (R > TR > C)
+	6, 0, 2, // Sixth Triangle (TR > TL > C)
+};
+
 // Object Matrices and Components -------------------
-glm::vec3 QuadPosition = glm::vec3(-0.5f, -0.5f, 0.0f);
+glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::mat4 TranslationMat;
-float QuadRotationAngle = 180.0f; // Degrees
+float RotationAngle = 180.0f; // Degrees
 glm::mat4 RotationMat;
-glm::vec3 QuadScale = glm::vec3(0.5f, 2.0f, 1.0f);
+glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
 glm::mat4 ScaleMat;
 
 //--------------------------------------------------
@@ -120,7 +139,8 @@ void Render(Program* _program, float* _currentTime)
 	// Render
 	//glDrawArrays(GL_TRIANGLES, 0, 3); //Triangle
 	//glDrawArrays(GL_TRIANGLES, 0, 6); //Quad
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
+	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
+	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
 	
 	//Unbind the VAO and program to prevent accidental modifications
 	glBindVertexArray(0);
@@ -153,15 +173,20 @@ void InitialSetup(Program* _program)
 	glBindVertexArray(_program->VAO_Tri);
 	
 	//Generate EBO for the quad
-	glGenBuffers(1, &_program->EBO_Quad);
+	/*glGenBuffers(1, &_program->EBO_Quad);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Quad);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);*/
+	//Generate EBO for the hexagon
+	glGenBuffers(1, &_program->EBO_Hex);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Hex);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Hex), Indices_Hex, GL_STATIC_DRAW);
 
 	//Generate VBO
 	glGenBuffers(1, &_program->VBO_Tri);
 	glBindBuffer(GL_ARRAY_BUFFER, _program->VBO_Tri);
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW); //Triangle
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Hex), Vertices_Hex, GL_STATIC_DRAW); //Hexagon
 
 	// Set the vertex attribute pointers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
@@ -180,7 +205,7 @@ void Update(float* _currentTime)
 	*_currentTime = (float)glfwGetTime();
 
 	// Calculate the Model Matrix
-	TranslationMat = glm::translate(glm::mat4(1.0f), QuadPosition);
-	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-	ScaleMat = glm::scale(glm::mat4(1.0f), QuadScale);
+	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
+	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
 }

@@ -11,6 +11,7 @@ public:
     GLuint VBO_Tri = 0;
     GLuint VAO_Tri = 0;
 	GLuint EBO_Quad = 0;
+	GLuint EBO_Hex = 0;
 
     Program();
     ~Program();
