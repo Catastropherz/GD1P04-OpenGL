@@ -23,8 +23,16 @@ void main()
 		0.0f, 0.0f, 1.0f + 0.5f * sin(CurrentTime), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
+
+	// Continuously rotating around the Z-axis
+	mat4 RotationVar = RotationMat * mat4(
+		cos(CurrentTime/3), -sin(CurrentTime/3), 0.0f, 0.0f,
+		sin(CurrentTime/3), cos(CurrentTime/3), 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
 	
 	// Apply transformations to the vertex position
-	gl_Position = TranslationMat * RotationMat * ScaleVar * vec4(Position, 1.0f);
+	gl_Position = TranslationMat * RotationVar * ScaleVar * vec4(Position, 1.0f);
 	FragColor = Color;
 }
