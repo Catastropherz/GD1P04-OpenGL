@@ -11,24 +11,6 @@ void Update(float* _currentTime);
 void Render(Program* _program, float* _currentTime);
 
 // Vertices / Indices --------------------------
-GLfloat Vertices_Tri[] = {
-	// Position			// Color
-	0.0f, 0.0f, 0.0f,	1.0f, 0.0f, 0.0f,	// Top Right
-	-0.5f, 0.8f, 0.0f,	0.0f, 1.0f, 0.0f,	// Top Left
-	0.5f, 0.8f, 0.0f,	0.0f, 0.0f, 1.0f,	// Bottom Center
-};
-GLfloat Vertices_Quad[] = {
-	// Index	// Position			// Color
-	/*0*/		-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,	// Top Left
-	/*1*/		-0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	// Btm Left
-	/*2*/		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	// Btm Right
-	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	// Top Right
-};
-GLuint Indices_Quad[] = {
-	0, 1, 2, // First Triangle (TL > BL > BR)
-	0, 2, 3, // Second Triangle (TL > BR > TR)
-};
-
 GLfloat Vertices_Hex[] = {
 	// Index	// Position				// Color
 	/*0*/		-0.5f, 0.866f, 0.0f,	1.0f, 0.0f, 1.0f,	// Top Left
@@ -48,19 +30,21 @@ GLuint Indices_Hex[] = {
 	6, 0, 2, // Sixth Triangle (TR > TL > C)
 };
 // Object Matrices and Components -------------------
+// Translation
 glm::vec3 Position = glm::vec3(-0.5f, -0.5f, 0.0f);
 glm::mat4 TranslationMat;
 glm::vec3 PositionSecondHex = glm::vec3(0.5f, 0.5f, 0.0f);
 glm::mat4 TranslationMatSecondHex;
-float RotationAngle = 0.0f; // Degrees
+// Rotation
+float RotationAngle = 0.0f; // in Degrees
 glm::mat4 RotationMat;
+// Scale
 glm::vec3 Scale = glm::vec3(0.5f, 0.5f, 1.0f);
 glm::mat4 ScaleMat;
+// Solid Color for breathing effect
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
 glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
-
-
-//--------------------------------------------------
+//-------------------------------------------------------
 
 int main()
 {
@@ -132,24 +116,23 @@ void Render(Program* _program, float* _currentTime)
 	
 	// Send variables to the shaders via Uniform
 	GLint CurrentTimeLoc = glGetUniformLocation(ProgramToUse, "CurrentTime");
-	glUniform1f(CurrentTimeLoc, *_currentTime);
+	glUniform1f(CurrentTimeLoc, *_currentTime); // CurrentTime
 	GLint TranslationMatLoc = glGetUniformLocation(ProgramToUse, "TranslationMat");
-	glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMat));
-	GLint RotationMatLoc = glGetUniformLocation(ProgramToUse, "RotationMat");
-	glUniformMatrix4fv(RotationMatLoc, 1, GL_FALSE, glm::value_ptr(RotationMat));
-	GLint ScaleMatLoc = glGetUniformLocation(ProgramToUse, "ScaleMat");
-	glUniformMatrix4fv(ScaleMatLoc, 1, GL_FALSE, glm::value_ptr(ScaleMat));
+	glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMat)); // Translation Matrix
+	GLint RotationMatLoc = glGetUniformLocation(ProgramToUse, "RotationMat"); 
+	glUniformMatrix4fv(RotationMatLoc, 1, GL_FALSE, glm::value_ptr(RotationMat)); // Rotation Matrix
+	GLint ScaleMatLoc = glGetUniformLocation(ProgramToUse, "ScaleMat"); 
+	glUniformMatrix4fv(ScaleMatLoc, 1, GL_FALSE, glm::value_ptr(ScaleMat)); // Scale Matrix
 	GLint SolidColorLoc = glGetUniformLocation(ProgramToUse, "SolidColor");
-	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorRed));
+	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorRed)); // Solid Color for the hexagon
 	
 	// Render
 	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
 
 	// Second Hexagon -----------------------------
-	glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMatSecondHex));
-	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorGreen));
-	// Render the second hexagon
-	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
+	glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMatSecondHex)); // Translation Matrix for the second hexagon
+	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorGreen)); // Solid Color for the second hexagon
+	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); // Render the second hexagon
 	
 	//Unbind the VAO and program to prevent accidental modifications
 	glBindVertexArray(0);
@@ -166,15 +149,7 @@ void InitialSetup(Program* _program)
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, 800, 800);
 
-	//// Load the shaders and create the shader program
-	_program->Program_FixedTri = ShaderLoader::CreateProgram("Resources/Shaders/FixedTriangle.vert", 
-															"Resources/Shaders/FixedColor.frag");
-	_program->Program_PositionOnly = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert", 
-																"Resources/Shaders/VertexColor.frag");
-	_program->Program_ColorFade = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert",
-																"Resources/Shaders/VertexColorFade.frag");
-	_program->Program_WorldSpace = ShaderLoader::CreateProgram("Resources/Shaders/WorldSpace.vert",
-																"Resources/Shaders/VertexColorFade.frag");
+	// Load the shaders and create the shader program
 	_program->Program_Assignment1 = ShaderLoader::CreateProgram("Resources/Shaders/Assignment1_WorldSpace.vert",
 																"Resources/Shaders/Assignment1_Color.frag");
     
@@ -182,10 +157,6 @@ void InitialSetup(Program* _program)
 	glGenVertexArrays(1, &_program->VAO_Tri);
 	glBindVertexArray(_program->VAO_Tri);
 	
-	//Generate EBO for the quad
-	/*glGenBuffers(1, &_program->EBO_Quad);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Quad);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);*/
 	//Generate EBO for the hexagon
 	glGenBuffers(1, &_program->EBO_Hex);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Hex);
@@ -194,9 +165,7 @@ void InitialSetup(Program* _program)
 	//Generate VBO
 	glGenBuffers(1, &_program->VBO_Tri);
 	glBindBuffer(GL_ARRAY_BUFFER, _program->VBO_Tri);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW); //Triangle
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Hex), Vertices_Hex, GL_STATIC_DRAW); //Hexagon
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Hex), Vertices_Hex, GL_STATIC_DRAW);
 
 	// Set the vertex attribute pointers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
@@ -218,6 +187,6 @@ void Update(float* _currentTime)
 	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
 	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
 	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
-	// Second hexagon
+	// Second hexagon position
 	TranslationMatSecondHex = glm::translate(glm::mat4(1.0f), PositionSecondHex);
 }
