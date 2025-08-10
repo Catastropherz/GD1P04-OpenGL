@@ -47,7 +47,6 @@ GLuint Indices_Hex[] = {
 	5, 6, 2, // Fifth Triangle (R > TR > C)
 	6, 0, 2, // Sixth Triangle (TR > TL > C)
 };
-
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::mat4 TranslationMat;
@@ -55,6 +54,9 @@ float RotationAngle = 0.0f; // Degrees
 glm::mat4 RotationMat;
 glm::vec3 Scale = glm::vec3(0.5f, 0.5f, 1.0f);
 glm::mat4 ScaleMat;
+glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
+glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
+
 
 //--------------------------------------------------
 
@@ -135,6 +137,8 @@ void Render(Program* _program, float* _currentTime)
 	glUniformMatrix4fv(RotationMatLoc, 1, GL_FALSE, glm::value_ptr(RotationMat));
 	GLint ScaleMatLoc = glGetUniformLocation(ProgramToUse, "ScaleMat");
 	glUniformMatrix4fv(ScaleMatLoc, 1, GL_FALSE, glm::value_ptr(ScaleMat));
+	GLint SolidColorLoc = glGetUniformLocation(ProgramToUse, "SolidColor");
+	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorRed));
 	
 	// Render
 	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO

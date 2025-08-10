@@ -2,10 +2,15 @@
 
 in vec3 FragColor;
 uniform float CurrentTime;
+uniform vec3 SolidColor;
 
 out vec4 FinalColor;
 
 void main()
 {
-	FinalColor = vec4(FragColor, 1.0f) * abs(sin(CurrentTime));
+	float mixRatio = abs(sin(CurrentTime));
+
+	vec3 mixedColor = mix(FragColor, SolidColor, mixRatio);
+	
+	FinalColor = vec4(mixedColor, 1.0f);
 }
