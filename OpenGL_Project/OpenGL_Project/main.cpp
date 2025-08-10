@@ -31,13 +31,13 @@ GLuint Indices_Quad[] = {
 
 GLfloat Vertices_Hex[] = {
 	// Index	// Position				// Color
-	/*0*/		-0.5f, 0.866f, 0.0f,	1.0f, 0.0f, 0.0f,	// Top Left
-	/*1*/		-1.0f, 0.0f, 0.0f,		0.0f, 1.0f, 0.0f,	// Left
+	/*0*/		-0.5f, 0.866f, 0.0f,	1.0f, 0.0f, 1.0f,	// Top Left
+	/*1*/		-1.0f, 0.0f, 0.0f,		0.0f, 0.0f, 1.0f,	// Left
 	/*2*/		0.0f, 0.0f, 0.0f,		1.0f, 1.0f, 1.0f,	// Center
-	/*3*/		-0.5f, -0.866f, 0.0f,	0.0f, 0.0f, 1.0f,	// Bottom Left
-	/*4*/		0.5f, -0.866f, 0.0f,	1.0f, 1.0f, 0.0f,	// Bottom Right
-	/*5*/		1.0f, 0.0f, 0.0f,		1.0f, 0.5f, 0.5f,	// Right
-	/*6*/		0.5f, 0.866f, 0.0f,		0.5f, 0.5f, 1.0f,	// Top Right
+	/*3*/		-0.5f, -0.866f, 0.0f,	0.0f, 1.0f, 1.0f,	// Bottom Left
+	/*4*/		0.5f, -0.866f, 0.0f,	0.0f, 1.0f, 0.0f,	// Bottom Right
+	/*5*/		1.0f, 0.0f, 0.0f,		1.0f, 1.0f, 0.0f,	// Right
+	/*6*/		0.5f, 0.866f, 0.0f,		1.0f, 0.0f, 0.0f,	// Top Right
 };
 GLuint Indices_Hex[] = {
 	0, 1, 2, // First Triangle (TL > L > C)
@@ -51,9 +51,9 @@ GLuint Indices_Hex[] = {
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::mat4 TranslationMat;
-float RotationAngle = 180.0f; // Degrees
+float RotationAngle = 0.0f; // Degrees
 glm::mat4 RotationMat;
-glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
+glm::vec3 Scale = glm::vec3(0.5f, 0.5f, 1.0f);
 glm::mat4 ScaleMat;
 
 //--------------------------------------------------
@@ -118,7 +118,7 @@ void Render(Program* _program, float* _currentTime)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Program to use
-	GLuint ProgramToUse = _program->Program_WorldSpace;
+	GLuint ProgramToUse = _program->Program_Assignment1;
 
 	// Bind the Program
 	glUseProgram(ProgramToUse);
@@ -137,9 +137,6 @@ void Render(Program* _program, float* _currentTime)
 	glUniformMatrix4fv(ScaleMatLoc, 1, GL_FALSE, glm::value_ptr(ScaleMat));
 	
 	// Render
-	//glDrawArrays(GL_TRIANGLES, 0, 3); //Triangle
-	//glDrawArrays(GL_TRIANGLES, 0, 6); //Quad
-	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
 	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
 	
 	//Unbind the VAO and program to prevent accidental modifications
@@ -152,7 +149,6 @@ void Render(Program* _program, float* _currentTime)
 void InitialSetup(Program* _program)
 {
 	// Set the clear color
-	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f); //blue
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //black
 
 	// Maps the range of window size to NDC  (-1 to 1)
@@ -167,6 +163,8 @@ void InitialSetup(Program* _program)
 																"Resources/Shaders/VertexColorFade.frag");
 	_program->Program_WorldSpace = ShaderLoader::CreateProgram("Resources/Shaders/WorldSpace.vert",
 																"Resources/Shaders/VertexColorFade.frag");
+	_program->Program_Assignment1 = ShaderLoader::CreateProgram("Resources/Shaders/Assignment1_WorldSpace.vert",
+																"Resources/Shaders/Assignment1_Color.frag");
     
 	// Generate VAO
 	glGenVertexArrays(1, &_program->VAO_Tri);
