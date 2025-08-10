@@ -48,8 +48,10 @@ GLuint Indices_Hex[] = {
 	6, 0, 2, // Sixth Triangle (TR > TL > C)
 };
 // Object Matrices and Components -------------------
-glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 Position = glm::vec3(-0.5f, -0.5f, 0.0f);
 glm::mat4 TranslationMat;
+glm::vec3 PositionSecondHex = glm::vec3(0.5f, 0.5f, 0.0f);
+glm::mat4 TranslationMatSecondHex;
 float RotationAngle = 0.0f; // Degrees
 glm::mat4 RotationMat;
 glm::vec3 Scale = glm::vec3(0.5f, 0.5f, 1.0f);
@@ -142,6 +144,12 @@ void Render(Program* _program, float* _currentTime)
 	
 	// Render
 	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
+
+	// Second Hexagon -----------------------------
+	glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMatSecondHex));
+	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorGreen));
+	// Render the second hexagon
+	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
 	
 	//Unbind the VAO and program to prevent accidental modifications
 	glBindVertexArray(0);
@@ -210,4 +218,6 @@ void Update(float* _currentTime)
 	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
 	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
 	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
+	// Second hexagon
+	TranslationMatSecondHex = glm::translate(glm::mat4(1.0f), PositionSecondHex);
 }
