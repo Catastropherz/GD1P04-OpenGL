@@ -174,7 +174,7 @@ void Render(Program* _program, float* _currentTime)
 void InitialSetup(Program* _program)
 {
 	// Set the clear color
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //black
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, 800, 800);
@@ -211,6 +211,10 @@ void InitialSetup(Program* _program)
 	// TEXTURE SETUP ---------------------------------
 	texture0.LoadTexture("Resources/Textures/Jump_Attack__000.png");
 	texture1.LoadTexture("Resources/Textures/Run (1).png");
+
+	// Enable blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void Update(float* _currentTime)
