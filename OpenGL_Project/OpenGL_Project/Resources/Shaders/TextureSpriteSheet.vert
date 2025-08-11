@@ -17,8 +17,7 @@ out vec2 FragTexCoords;
 //Shader Functionality
 void main()
 {
-	//gl_Position = ModelMat * vec4(Position, 1.0);
-	gl_Position = vec4(Position, 1.0);
+	gl_Position = ModelMat * vec4(Position, 1.0);
 	FragColor = Color;
 
 	//Animation logic for sprite sheet

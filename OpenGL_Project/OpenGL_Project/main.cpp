@@ -49,13 +49,15 @@ GLuint Indices_Hex[] = {
 };
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::mat4 TranslationMat;
-glm::vec3 PositionSecondHex = glm::vec3(0.5f, 0.5f, 0.0f);
-glm::mat4 TranslationMatSecondHex;
 float RotationAngle = 0.0f; // Degrees
-glm::mat4 RotationMat;
 glm::vec3 Scale = glm::vec3(1.5f, 1.5f, 1.0f);
+
+
+glm::mat4 TranslationMat;
+glm::mat4 RotationMat;
 glm::mat4 ScaleMat;
+glm::mat4 ModelMat;
+
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
 glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 
@@ -136,12 +138,8 @@ void Render(Program* _program, float* _currentTime)
 	// Send variables to the shaders via Uniform
 	GLint CurrentTimeLoc = glGetUniformLocation(ProgramToUse, "CurrentTime");
 	glUniform1f(CurrentTimeLoc, *_currentTime);
-	GLint TranslationMatLoc = glGetUniformLocation(ProgramToUse, "TranslationMat");
-	glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMat));
-	GLint RotationMatLoc = glGetUniformLocation(ProgramToUse, "RotationMat");
-	glUniformMatrix4fv(RotationMatLoc, 1, GL_FALSE, glm::value_ptr(RotationMat));
-	GLint ScaleMatLoc = glGetUniformLocation(ProgramToUse, "ScaleMat");
-	glUniformMatrix4fv(ScaleMatLoc, 1, GL_FALSE, glm::value_ptr(ScaleMat));
+	GLint ModelMatLoc = glGetUniformLocation(ProgramToUse, "ModelMat");
+	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(ModelMat));
 	GLint SolidColorLoc = glGetUniformLocation(ProgramToUse, "SolidColor");
 	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorRed));
 	GLint frameIndexLoc = glGetUniformLocation(ProgramToUse, "FrameIndex");
@@ -160,12 +158,6 @@ void Render(Program* _program, float* _currentTime)
 	
 	// Render
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
-	//glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
-
-	//// Second Hexagon -----------------------------
-	//glUniformMatrix4fv(TranslationMatLoc, 1, GL_FALSE, glm::value_ptr(TranslationMatSecondHex));
-	//glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorGreen));
-	//// Render the second hexagon
 	//glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
 	
 	//Unbind the VAO and program to prevent accidental modifications
@@ -234,8 +226,8 @@ void Update(float* _currentTime)
 	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
 	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
 	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
-	// Second hexagon
-	TranslationMatSecondHex = glm::translate(glm::mat4(1.0f), PositionSecondHex);
+
+	ModelMat = TranslationMat * RotationMat * ScaleMat;
 
 	// Animate sprite sheet
 	texture0.AnimateSpriteSheet(*_currentTime);
