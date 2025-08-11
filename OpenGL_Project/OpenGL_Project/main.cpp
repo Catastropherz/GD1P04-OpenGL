@@ -125,7 +125,7 @@ void Render(Program* _program, float* _currentTime)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Program to use
-	GLuint ProgramToUse = _program->Program_TextureMix;
+	GLuint ProgramToUse = _program->Program_SpriteSheet;
 
 	// Bind the Program
 	glUseProgram(ProgramToUse);
@@ -144,15 +144,19 @@ void Render(Program* _program, float* _currentTime)
 	glUniformMatrix4fv(ScaleMatLoc, 1, GL_FALSE, glm::value_ptr(ScaleMat));
 	GLint SolidColorLoc = glGetUniformLocation(ProgramToUse, "SolidColor");
 	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorRed));
+	GLint frameIndexLoc = glGetUniformLocation(ProgramToUse, "FrameIndex");
+	glUniform1i(frameIndexLoc, texture0.GetFrameIndex());
+	GLint frameCountLoc = glGetUniformLocation(ProgramToUse, "FrameCount");
+	glUniform1i(frameCountLoc, texture0.GetFrameCount());
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture0.GetTextureID());
 	glUniform1i(glGetUniformLocation(ProgramToUse, "Texture0"), 0);
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texture1.GetTextureID());
-	glUniform1i(glGetUniformLocation(ProgramToUse, "Texture1"), 1);
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, texture1.GetTextureID());
+	//glUniform1i(glGetUniformLocation(ProgramToUse, "Texture1"), 1);
 	
 	// Render
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
@@ -209,8 +213,9 @@ void InitialSetup(Program* _program)
 	glBindVertexArray(0);
 
 	// TEXTURE SETUP ---------------------------------
-	texture0.LoadTexture("Resources/Textures/Jump_Attack__000.png");
-	texture1.LoadTexture("Resources/Textures/Run (1).png");
+	texture0.LoadTexture("Resources/Textures/AdventureGirl_Attack.png");
+	texture0.SetSpriteSheetParameters(7);
+	//texture1.LoadTexture("Resources/Textures/Run (1).png");
 
 	// Enable blending
 	glEnable(GL_BLEND);
@@ -231,4 +236,7 @@ void Update(float* _currentTime)
 	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
 	// Second hexagon
 	TranslationMatSecondHex = glm::translate(glm::mat4(1.0f), PositionSecondHex);
+
+	// Animate sprite sheet
+	texture0.AnimateSpriteSheet(*_currentTime);
 }

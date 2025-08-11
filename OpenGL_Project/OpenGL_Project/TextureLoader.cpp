@@ -54,3 +54,17 @@ void TextureLoader::SetTextureParameters(GLenum wrapS, GLenum wrapT, GLenum minF
     // Unbind the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+void TextureLoader::AnimateSpriteSheet(float _currentTime)
+{
+    if(isSpriteSheet)
+    {
+        float deltaTime = _currentTime - previousTime;
+        float frameTime = 1.0f / frameRate; // Calculate the time per frame based on the frame rate
+        if (isSpriteSheet && deltaTime > frameTime) // Adjust the frame rate as needed
+        {
+            frameIndex = (frameIndex + 1) % frameCount; // Loop through frames
+            previousTime = _currentTime;
+        }
+    }
+}
