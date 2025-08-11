@@ -27,6 +27,9 @@
     <ClCompile Include="Program.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\FixedColor.frag">
@@ -59,12 +62,18 @@
     <None Include="Resources\Shaders\Texture.frag">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="Resources\Shaders\TextureMix.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Program.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

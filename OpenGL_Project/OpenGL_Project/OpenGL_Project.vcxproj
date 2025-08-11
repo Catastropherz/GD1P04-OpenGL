@@ -136,6 +136,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
+    <ClCompile Include="TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Assignment1_Color.frag" />
@@ -145,6 +146,7 @@
     <None Include="Resources\Shaders\PositionOnly.vert" />
     <None Include="Resources\Shaders\Texture.frag" />
     <None Include="Resources\Shaders\Texture.vert" />
+    <None Include="Resources\Shaders\TextureMix.frag" />
     <None Include="Resources\Shaders\VertexColor.frag" />
     <None Include="Resources\Shaders\VertexColorFade.frag" />
     <None Include="Resources\Shaders\WorldSpace.vert" />
@@ -152,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="Program.h" />
     <ClInclude Include="ShaderLoader.h" />
+    <ClInclude Include="TextureLoader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

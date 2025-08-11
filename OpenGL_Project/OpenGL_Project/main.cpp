@@ -1,10 +1,8 @@
-#include "Program.h"
-#include "ShaderLoader.h"
+#include "TextureLoader.h"
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+
 
 GLFWwindow* Window = nullptr;
 
@@ -21,10 +19,10 @@ GLfloat Vertices_Tri[] = {
 };
 GLfloat Vertices_Quad[] = {
 	// Index	// Position			// Color			// Texture Coords
-	/*0*/		-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,	-2.0f, 2.0f,		// Top Left
-	/*1*/		-0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	-2.0f, -2.0f,		// Btm Left
-	/*2*/		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	2.0f, -2.0f,		// Btm Right
-	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	2.0f, 2.0f,		// Top Right
+	/*0*/		-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,	0.0f, 1.0f,		// Top Left
+	/*1*/		-0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	0.0f, 0.0f,		// Btm Left
+	/*2*/		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	1.0f, 0.0f,		// Btm Right
+	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	1.0f, 1.0f,		// Top Right
 };
 GLuint Indices_Quad[] = {
 	0, 1, 2, // First Triangle (TL > BL > BR)
@@ -61,7 +59,9 @@ glm::mat4 ScaleMat;
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
 glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 
-GLuint texturePotion;
+//GLuint texturePotion;
+TextureLoader texture0;
+TextureLoader texture1;
 //--------------------------------------------------
 
 int main()
@@ -72,9 +72,6 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 
-	//Create the program
-	Program program;
-	float CurrentTime = 0.0f;
 
 	// Create an GLFW control window
 	Window = glfwCreateWindow(800, 800, "First OpenGL Window", NULL, NULL);
@@ -98,6 +95,10 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
+
+	//Create the program
+	Program program;
+	float CurrentTime = 0.0f;
 
 	// Setup the Initial elements of the program
 	InitialSetup(&program);
@@ -124,7 +125,7 @@ void Render(Program* _program, float* _currentTime)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Program to use
-	GLuint ProgramToUse = _program->Program_Texture;
+	GLuint ProgramToUse = _program->Program_TextureMix;
 
 	// Bind the Program
 	glUseProgram(ProgramToUse);
@@ -146,8 +147,12 @@ void Render(Program* _program, float* _currentTime)
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texturePotion);
-	glUniform1i(glGetUniformLocation(_program->Program_Texture, "Texture0"), 0);
+	glBindTexture(GL_TEXTURE_2D, texture0.GetTextureID());
+	glUniform1i(glGetUniformLocation(ProgramToUse, "Texture0"), 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture1.GetTextureID());
+	glUniform1i(glGetUniformLocation(ProgramToUse, "Texture1"), 1);
 	
 	// Render
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
@@ -173,20 +178,6 @@ void InitialSetup(Program* _program)
 
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, 800, 800);
-
-	//// Load the shaders and create the shader program
-	_program->Program_FixedTri = ShaderLoader::CreateProgram("Resources/Shaders/FixedTriangle.vert", 
-															"Resources/Shaders/FixedColor.frag");
-	_program->Program_PositionOnly = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert", 
-																"Resources/Shaders/VertexColor.frag");
-	_program->Program_ColorFade = ShaderLoader::CreateProgram("Resources/Shaders/PositionOnly.vert",
-																"Resources/Shaders/VertexColorFade.frag");
-	_program->Program_WorldSpace = ShaderLoader::CreateProgram("Resources/Shaders/WorldSpace.vert",
-																"Resources/Shaders/VertexColorFade.frag");
-	_program->Program_Assignment1 = ShaderLoader::CreateProgram("Resources/Shaders/Assignment1_WorldSpace.vert",
-																"Resources/Shaders/Assignment1_Color.frag");
-	_program->Program_Texture = ShaderLoader::CreateProgram("Resources/Shaders/Texture.vert",
-															"Resources/Shaders/Texture.frag");
     
 	// Generate VAO
 	glGenVertexArrays(1, &_program->VAO_Tri);
@@ -218,31 +209,8 @@ void InitialSetup(Program* _program)
 	glBindVertexArray(0);
 
 	// TEXTURE SETUP ---------------------------------
-	// Load the image data
-	int imageWidth, imageHeight, imageComponents;
-	stbi_set_flip_vertically_on_load(true); // Flip the image vertically if needed
-	unsigned char* imageData = stbi_load(	"Resources/Textures/Jump_Attack__000.png",
-											&imageWidth, &imageHeight, &imageComponents, 0);
-	if (!imageData) {
-		std::cerr << "Failed to load texture image!" << std::endl;
-	}
-	// Create and bind a texture
-	glGenTextures(1, &texturePotion);
-	glBindTexture(GL_TEXTURE_2D, texturePotion);
-	// Check how many components the image has (RGBA or RGB)
-	GLint loadedComponents = (imageComponents == 4) ? GL_RGBA : GL_RGB;
-	// Populate the texture with the image data
-	glTexImage2D(	GL_TEXTURE_2D, 0, loadedComponents, imageWidth, imageHeight, 0,
-					loadedComponents, GL_UNSIGNED_BYTE, imageData);
-	// Setting the filtering
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	// Generate the mipmaps, free the memory, and unbind the texture
-	glGenerateMipmap(GL_TEXTURE_2D);
-	stbi_image_free(imageData);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	texture0.LoadTexture("Resources/Textures/Jump_Attack__000.png");
+	texture1.LoadTexture("Resources/Textures/Run (1).png");
 }
 
 void Update(float* _currentTime)
