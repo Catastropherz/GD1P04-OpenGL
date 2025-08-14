@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
@@ -141,6 +142,7 @@
   <ItemGroup>
     <None Include="Resources\Shaders\Assignment1_Color.frag" />
     <None Include="Resources\Shaders\Assignment1_WorldSpace.vert" />
+    <None Include="Resources\Shaders\ClipSpace.vert" />
     <None Include="Resources\Shaders\FixedColor.frag" />
     <None Include="Resources\Shaders\FixedTriangle.vert" />
     <None Include="Resources\Shaders\PositionOnly.vert" />
@@ -153,6 +155,7 @@
     <None Include="Resources\Shaders\WorldSpace.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Program.h" />
     <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="TextureLoader.h" />

@@ -1,7 +1,5 @@
 #include "TextureLoader.h"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+#include "Camera.h"
 
 
 GLFWwindow* Window = nullptr;
@@ -47,17 +45,80 @@ GLuint Indices_Hex[] = {
 	5, 6, 2, // Fifth Triangle (R > TR > C)
 	6, 0, 2, // Sixth Triangle (TR > TL > C)
 };
+GLfloat Vertices_Cube[] = {
+	// Index	// Position				// Tex Coords	// Position Index
+				// Front Face
+	/* 00 */	-0.5f, 0.5f, 0.5f,		0.0f, 1.0f,		// 00
+	/* 01 */	-0.5f, -0.5f, 0.5f,		0.0f, 0.0f,		// 01
+	/* 02 */	0.5f, -0.5f, 0.5f,		1.0f, 0.0f,		// 02
+	/* 03 */	0.5f, 0.5f, 0.5f,		1.0f, 1.0f,		// 03
+				// Back Face
+	/* 04 */	0.5f, 0.5f, -0.5f,		0.0f, 1.0f,		// 04
+	/* 05 */	0.5f, -0.5f, -0.5f,		0.0f, 0.0f,		// 05
+	/* 06 */	-0.5f, -0.5f, -0.5f,	1.0f, 0.0f,		// 06
+	/* 07 */	-0.5f, 0.5f, -0.5f,		1.0f, 1.0f,		// 07
+				// Right Face
+	/* 08 */	0.5f, 0.5f, 0.5f,		0.0f, 1.0f,		// 03
+	/* 09 */	0.5f, -0.5f, 0.5f,		0.0f, 0.0f,		// 02
+	/* 10 */	0.5f, -0.5f, -0.5f,		1.0f, 0.0f,		// 05
+	/* 11 */	0.5f, 0.5f, -0.5f,		1.0f, 1.0f,		// 04
+				// Left Face
+	/* 12 */	-0.5f, 0.5f, -0.5f,		0.0f, 1.0f,		// 07
+	/* 13 */	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f,		// 06
+	/* 14 */	-0.5f, -0.5f, 0.5f,		1.0f, 0.0f,		// 01
+	/* 15 */	-0.5f, 0.5f, 0.5f,		1.0f, 1.0f,		// 00
+				// Top Face
+	/* 16 */	-0.5f, 0.5f, -0.5f,		0.0f, 1.0f,		// 07
+	/* 17 */	-0.5f, 0.5f, 0.5f,		0.0f, 0.0f,		// 00
+	/* 18 */	0.5f, 0.5f, 0.5f,		1.0f, 0.0f,		// 03
+	/* 19 */	0.5f, 0.5f, -0.5f,		1.0f, 1.0f,		// 04
+				// Bottom Face
+	/* 20 */	-0.5f, -0.5f, 0.5f,		0.0f, 1.0f,		// 01
+	/* 21 */	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f,		// 06
+	/* 22 */	0.5f, -0.5f, -0.5f,		1.0f, 0.0f,		// 05
+	/* 23 */	0.5f, -0.5f, 0.5f,		1.0f, 1.0f,		// 02
+};
+GLuint Indices_Cube[] = {
+	0,	1,	2,	// Front Face
+	0,	2,	3,
+	4,	5,	6,	// Back Face
+	4,	6,	7,
+	8,	9,	10, // Right Face
+	8,	10, 11,
+	12, 13, 14, // Left Face
+	12, 14, 15,
+	16, 17, 18, // Top Face
+	16, 18, 19,
+	20, 21, 22, // Bottom Face
+	20, 22, 23,
+};
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
+//glm::vec3 Scale = glm::vec3(100.0f, 100.0f, 1.0f); // pixel scale
 float RotationAngle = 0.0f; // Degrees
-glm::vec3 Scale = glm::vec3(1.5f, 1.5f, 1.0f);
 
-
+// Model Matrix
 glm::mat4 TranslationMat;
 glm::mat4 RotationMat;
 glm::mat4 ScaleMat;
 glm::mat4 ModelMat;
 
+// Camera Variables (move to camera class later)
+glm::vec3 CameraPos = glm::vec3(1.0f, 1.0f, 3.0f);
+glm::vec3 CameraLookDir = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 CameraTargetPos = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 CameraUpDir = glm::vec3(0.0f, 1.0f, 0.0f);
+// Calculate the View Matrix from the camera variables
+//glm::mat4 ViewMat = glm::lookAt(CameraPos, CameraPos + CameraLookDir, CameraUpDir);
+glm::mat4 ViewMat = glm::lookAt(CameraPos, CameraTargetPos, CameraUpDir);
+
+// Projection Matrix
+int WindowWidth = 800;
+int WindowHeight = 800;
+glm::mat4 ProjectionMat;
+
+// Colors
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
 glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 
@@ -76,7 +137,7 @@ int main()
 
 
 	// Create an GLFW control window
-	Window = glfwCreateWindow(800, 800, "First OpenGL Window", NULL, NULL);
+	Window = glfwCreateWindow(WindowWidth, WindowHeight, "First OpenGL Window", NULL, NULL);
 	if (Window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -124,10 +185,11 @@ int main()
 
 void Render(Program* _program, float* _currentTime)
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	// Clear buffer
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Program to use
-	GLuint ProgramToUse = _program->Program_SpriteSheet;
+	GLuint ProgramToUse = _program->Program_ClipSpace;
 
 	// Bind the Program
 	glUseProgram(ProgramToUse);
@@ -136,16 +198,14 @@ void Render(Program* _program, float* _currentTime)
 	glBindVertexArray(_program->VAO_Tri);
 	
 	// Send variables to the shaders via Uniform
-	GLint CurrentTimeLoc = glGetUniformLocation(ProgramToUse, "CurrentTime");
-	glUniform1f(CurrentTimeLoc, *_currentTime);
-	GLint ModelMatLoc = glGetUniformLocation(ProgramToUse, "ModelMat");
-	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(ModelMat));
-	GLint SolidColorLoc = glGetUniformLocation(ProgramToUse, "SolidColor");
-	glUniform3fv(SolidColorLoc, 1, glm::value_ptr(SolidColorRed));
-	GLint frameIndexLoc = glGetUniformLocation(ProgramToUse, "FrameIndex");
-	glUniform1i(frameIndexLoc, texture0.GetFrameIndex());
-	GLint frameCountLoc = glGetUniformLocation(ProgramToUse, "FrameCount");
-	glUniform1i(frameCountLoc, texture0.GetFrameCount());
+	glUniform1f(glGetUniformLocation(ProgramToUse, "CurrentTime"), *_currentTime);
+	glUniform3fv(glGetUniformLocation(ProgramToUse, "SolidColor"), 1, glm::value_ptr(SolidColorRed));
+	glUniform1i(glGetUniformLocation(ProgramToUse, "FrameIndex"), texture0.GetFrameIndex());
+	glUniform1i(glGetUniformLocation(ProgramToUse, "FrameCount"), texture0.GetFrameCount());
+	// Matrices
+	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
+	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(ProjectionMat));
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
@@ -157,8 +217,9 @@ void Render(Program* _program, float* _currentTime)
 	//glUniform1i(glGetUniformLocation(ProgramToUse, "Texture1"), 1);
 	
 	// Render
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
+	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //Quad using EBO
 	//glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0); //Hexagon using EBO
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); //Cube using EBO
 	
 	//Unbind the VAO and program to prevent accidental modifications
 	glBindVertexArray(0);
@@ -174,39 +235,63 @@ void InitialSetup(Program* _program)
 
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, 800, 800);
-    
+
+	// Enable Depth testing for 3D
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	// Calculate the projection matrix 
+	// Anchor top left
+	//ProjectionMat = glm::ortho(0.0f, (float)WindowWidth, (float)WindowHeight, 0.0f, 0.1f, 100.0f);
+	// Anchor center
+	//ProjectionMat = glm::ortho((float)-WindowWidth/2, (float)WindowWidth/2, (float)-WindowHeight/2, (float)-WindowHeight/2, 0.1f, 100.0f);
+	// Perspective projection
+	ProjectionMat = glm::perspective(glm::radians(45.0f), (float)WindowWidth / (float)WindowHeight, 0.1f, 100.0f); 
+	 
 	// Generate VAO
 	glGenVertexArrays(1, &_program->VAO_Tri);
 	glBindVertexArray(_program->VAO_Tri);
 	
 	//Generate EBO for the quad
-	glGenBuffers(1, &_program->EBO_Quad);
+	/*glGenBuffers(1, &_program->EBO_Quad);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Quad);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);*/
 	//Generate EBO for the hexagon
 	/*glGenBuffers(1, &_program->EBO_Hex);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Hex);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Hex), Indices_Hex, GL_STATIC_DRAW);*/
+	//Generate EBO for the cube
+	glGenBuffers(1, &_program->EBO_Cube);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Cube);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Cube), Indices_Cube, GL_STATIC_DRAW);
 
 	//Generate VBO
 	glGenBuffers(1, &_program->VBO_Tri);
 	glBindBuffer(GL_ARRAY_BUFFER, _program->VBO_Tri);
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW); //Triangle
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Hex), Vertices_Hex, GL_STATIC_DRAW); //Hexagon
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Cube), Vertices_Cube, GL_STATIC_DRAW); //Cube
 
 	// Set the vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+	//glEnableVertexAttribArray(2);
+	//glBindVertexArray(0);
+
+	// After binding VAO and VBO for the cube
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
 
 	// TEXTURE SETUP ---------------------------------
-	texture0.LoadTexture("Resources/Textures/AdventureGirl_Attack.png");
-	texture0.SetSpriteSheetParameters(7);
+	texture0.LoadTexture("Resources/Textures/ColorPickerOld.png");
+	//texture0.SetSpriteSheetParameters(7);
 	//texture1.LoadTexture("Resources/Textures/Run (1).png");
 
 	// Enable blending

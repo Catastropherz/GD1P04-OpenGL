@@ -12,10 +12,12 @@ public:
     GLuint Program_Texture = 0;
 	GLuint Program_TextureMix = 0;
 	GLuint Program_SpriteSheet = 0;
+	GLuint Program_ClipSpace = 0;
     GLuint VBO_Tri = 0;
     GLuint VAO_Tri = 0;
 	GLuint EBO_Quad = 0;
 	GLuint EBO_Hex = 0;
+	GLuint EBO_Cube = 0;
 
     Program();
     ~Program();

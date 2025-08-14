@@ -18,6 +18,8 @@ Program::Program()
 		                                                "Resources/Shaders/TextureMix.frag");
     Program_SpriteSheet = ShaderLoader::CreateProgram( "Resources/Shaders/TextureSpriteSheet.vert", 
 		                                                "Resources/Shaders/Texture.frag");
+    Program_ClipSpace = ShaderLoader::CreateProgram(   "Resources/Shaders/ClipSpace.vert", 
+		                                                "Resources/Shaders/Texture.frag");
 }
 
 Program::~Program()
