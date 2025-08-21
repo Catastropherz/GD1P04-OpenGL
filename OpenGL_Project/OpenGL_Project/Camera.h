@@ -15,11 +15,14 @@ private:
 
 	glm::mat4 viewMatrix;
 	glm::mat4 projectionMatrix;
+
+	float previousTime = 0.0f;
+	float frameRate = 60.0f; // Frames per second
 public:
 	Camera();
 	~Camera();
 
-	void Update(float _deltaTime);
+	void Update(float _currentTime);
 	glm::mat4 GetViewMatrix() const;
 	glm::mat4 GetProjectionMatrix() const;
 	void SetProjectionMatrix_Perspective(int _width, int _height, float _fov = 45.0f, float _nearPlane = 0.1f, float _farPlane = 100.0f);

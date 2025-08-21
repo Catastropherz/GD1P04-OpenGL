@@ -5,7 +5,7 @@
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _windowHeight);
-void Update(float* _currentTime);
+void Update(Camera* _camera, float* _currentTime);
 void Render(Program* _program, Camera* _camera, float* _currentTime);
 
 // Vertices / Indices --------------------------
@@ -95,7 +95,7 @@ GLuint Indices_Cube[] = {
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
-//glm::vec3 Scale = glm::vec3(100.0f, 100.0f, 1.0f); // pixel scale
+//glm::vec3 Scale = glm::vec3(200.0f, 200.0f, 200.0f); // pixel scale
 float RotationAngle = 0.0f; // Degrees
 
 // Model Matrix
@@ -159,7 +159,7 @@ int main()
 	while (glfwWindowShouldClose(Window) == false)
 	{
 		//Update all objects and run the processes
-		Update(&CurrentTime);
+		Update(&camera, &CurrentTime);
 
 		// Render all objects
 		Render(&program, &camera, &CurrentTime);
@@ -229,11 +229,19 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+	// Face Culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK); // Default is back face culling
+	glFrontFace(GL_CCW); // Default is counter-clockwise winding order to be considered front-facing
+
+	// Wireframe mode
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Uncomment to see wireframe mode
+
 	// Calculate the projection matrix 
 	// Anchor top left
 	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 100.0f);
 	// Anchor center
-	// _camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
+	 //_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
 	// Perspective projection
 	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
 
@@ -288,7 +296,7 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void Update(float* _currentTime)
+void Update(Camera* _camera, float* _currentTime)
 {
 	// Check for any events like key presses or mouse movements
 	glfwPollEvents();
@@ -305,4 +313,7 @@ void Update(float* _currentTime)
 
 	// Animate sprite sheet
 	texture0.AnimateSpriteSheet(*_currentTime);
+
+	// Update the camera
+	_camera->Update(*_currentTime);
 }
