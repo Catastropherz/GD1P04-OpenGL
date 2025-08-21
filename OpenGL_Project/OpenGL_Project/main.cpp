@@ -4,9 +4,9 @@
 
 GLFWwindow* Window = nullptr;
 
-void InitialSetup(Program* _program);
+void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _windowHeight);
 void Update(float* _currentTime);
-void Render(Program* _program, float* _currentTime);
+void Render(Program* _program, Camera* _camera, float* _currentTime);
 
 // Vertices / Indices --------------------------
 GLfloat Vertices_Tri[] = {
@@ -104,19 +104,9 @@ glm::mat4 RotationMat;
 glm::mat4 ScaleMat;
 glm::mat4 ModelMat;
 
-// Camera Variables (move to camera class later)
-glm::vec3 CameraPos = glm::vec3(1.0f, 1.0f, 3.0f);
-glm::vec3 CameraLookDir = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 CameraTargetPos = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 CameraUpDir = glm::vec3(0.0f, 1.0f, 0.0f);
-// Calculate the View Matrix from the camera variables
-//glm::mat4 ViewMat = glm::lookAt(CameraPos, CameraPos + CameraLookDir, CameraUpDir);
-glm::mat4 ViewMat = glm::lookAt(CameraPos, CameraTargetPos, CameraUpDir);
-
-// Projection Matrix
+// Window
 int WindowWidth = 800;
 int WindowHeight = 800;
-glm::mat4 ProjectionMat;
 
 // Colors
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
@@ -159,12 +149,11 @@ int main()
 		return -1;
 	}
 
-	//Create the program
+	// Setup the Initial elements of the program
 	Program program;
 	float CurrentTime = 0.0f;
-
-	// Setup the Initial elements of the program
-	InitialSetup(&program);
+	Camera camera;
+	InitialSetup(&program, &camera, WindowWidth, WindowHeight);
 
 	// Main Loop ***********************************************
 	while (glfwWindowShouldClose(Window) == false)
@@ -173,7 +162,7 @@ int main()
 		Update(&CurrentTime);
 
 		// Render all objects
-		Render(&program, &CurrentTime);
+		Render(&program, &camera, &CurrentTime);
 	}
 	// End of Main Loop ****************************************
 
@@ -183,7 +172,7 @@ int main()
 	return 0;
 }
 
-void Render(Program* _program, float* _currentTime)
+void Render(Program* _program, Camera* _camera, float* _currentTime)
 {
 	// Clear buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -204,8 +193,8 @@ void Render(Program* _program, float* _currentTime)
 	glUniform1i(glGetUniformLocation(ProgramToUse, "FrameCount"), texture0.GetFrameCount());
 	// Matrices
 	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(ProjectionMat));
+	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(_camera->GetViewMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(ProgramToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(_camera->GetProjectionMatrix()));
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
@@ -228,13 +217,13 @@ void Render(Program* _program, float* _currentTime)
 	glfwSwapBuffers(Window);
 }
 
-void InitialSetup(Program* _program)
+void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _windowHeight)
 {
 	// Set the clear color
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 	// Maps the range of window size to NDC  (-1 to 1)
-	glViewport(0, 0, 800, 800);
+	glViewport(0, 0, _windowWidth, _windowHeight);
 
 	// Enable Depth testing for 3D
 	glEnable(GL_DEPTH_TEST);
@@ -242,12 +231,12 @@ void InitialSetup(Program* _program)
 
 	// Calculate the projection matrix 
 	// Anchor top left
-	//ProjectionMat = glm::ortho(0.0f, (float)WindowWidth, (float)WindowHeight, 0.0f, 0.1f, 100.0f);
+	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 100.0f);
 	// Anchor center
-	//ProjectionMat = glm::ortho((float)-WindowWidth/2, (float)WindowWidth/2, (float)-WindowHeight/2, (float)-WindowHeight/2, 0.1f, 100.0f);
+	// _camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
 	// Perspective projection
-	ProjectionMat = glm::perspective(glm::radians(45.0f), (float)WindowWidth / (float)WindowHeight, 0.1f, 100.0f); 
-	 
+	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
+
 	// Generate VAO
 	glGenVertexArrays(1, &_program->VAO_Tri);
 	glBindVertexArray(_program->VAO_Tri);

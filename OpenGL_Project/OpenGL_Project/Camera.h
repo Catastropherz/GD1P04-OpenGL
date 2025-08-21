@@ -22,5 +22,7 @@ public:
 	void Update(float _deltaTime);
 	glm::mat4 GetViewMatrix() const;
 	glm::mat4 GetProjectionMatrix() const;
+	void SetProjectionMatrix_Perspective(int _width, int _height, float _fov = 45.0f, float _nearPlane = 0.1f, float _farPlane = 100.0f);
+	void SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top, float _nearPlane = 0.1f, float _farPlane = 100.0f);
 };
 
