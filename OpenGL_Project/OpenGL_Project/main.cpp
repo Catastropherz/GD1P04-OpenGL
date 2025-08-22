@@ -5,8 +5,13 @@
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _windowHeight);
-void Update(Camera* _camera, float* _currentTime);
+void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime);
 void Render(Program* _program, Camera* _camera, float* _currentTime);
+void ProcessInput(float _deltaTime);
+void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
+void TextInput(GLFWwindow* _window, unsigned int _codePoint);
+void MouseButtonInput(GLFWwindow* _window, int _button, int _action, int _mods);
+void CursorPositionInput(GLFWwindow* _window, double _xpos, double _ypos);
 
 // Vertices / Indices --------------------------
 GLfloat Vertices_Tri[] = {
@@ -108,6 +113,10 @@ glm::mat4 ModelMat;
 int WindowWidth = 800;
 int WindowHeight = 800;
 
+// Entry bool
+bool IsTextEntryActive = false;
+bool IsMousePositionActive = false;
+
 // Colors
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
 glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
@@ -152,14 +161,16 @@ int main()
 	// Setup the Initial elements of the program
 	Program program;
 	float CurrentTime = 0.0f;
-	Camera camera;
+	float PreviousTime = 0.0f;
+	float DeltaTime = 0.0f;
+	Camera camera(Window);
 	InitialSetup(&program, &camera, WindowWidth, WindowHeight);
 
 	// Main Loop ***********************************************
 	while (glfwWindowShouldClose(Window) == false)
 	{
 		//Update all objects and run the processes
-		Update(&camera, &CurrentTime);
+		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime);
 
 		// Render all objects
 		Render(&program, &camera, &CurrentTime);
@@ -225,6 +236,15 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, _windowWidth, _windowHeight);
 
+	// Set the key input callback function
+	glfwSetKeyCallback(Window, KeyInput);
+	glfwSetMouseButtonCallback(Window, MouseButtonInput);
+
+	// Cursor mode
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Normal cursor mode
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide and lock cursor mode
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Hide cursor mode
+
 	// Enable Depth testing for 3D
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -238,9 +258,9 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Uncomment to see wireframe mode
 
 	// Calculate the projection matrix 
-	// Anchor top left
+	// Anchor top left --------
 	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 100.0f);
-	// Anchor center
+	// Anchor center --------
 	 //_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
 	// Perspective projection
 	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
@@ -249,15 +269,15 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	glGenVertexArrays(1, &_program->VAO_Tri);
 	glBindVertexArray(_program->VAO_Tri);
 	
-	//Generate EBO for the quad
+	//Generate EBO for the quad --------
 	/*glGenBuffers(1, &_program->EBO_Quad);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Quad);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);*/
-	//Generate EBO for the hexagon
+	//Generate EBO for the hexagon --------
 	/*glGenBuffers(1, &_program->EBO_Hex);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Hex);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Hex), Indices_Hex, GL_STATIC_DRAW);*/
-	//Generate EBO for the cube
+	//Generate EBO for the cube --------
 	glGenBuffers(1, &_program->EBO_Cube);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _program->EBO_Cube);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Cube), Indices_Cube, GL_STATIC_DRAW);
@@ -296,13 +316,18 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void Update(Camera* _camera, float* _currentTime)
+void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime)
 {
 	// Check for any events like key presses or mouse movements
 	glfwPollEvents();
 
 	// Get time
 	*_currentTime = (float)glfwGetTime();
+	*_deltaTime = *_currentTime - *_previousTime;
+	*_previousTime = *_currentTime;
+
+	// Process input
+	ProcessInput(*_deltaTime);
 
 	// Calculate the Model Matrix
 	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
@@ -316,4 +341,96 @@ void Update(Camera* _camera, float* _currentTime)
 
 	// Update the camera
 	_camera->Update(*_currentTime);
+
+}
+
+//Query GLFW key states
+void ProcessInput(float _deltaTime)
+{
+	if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		Position += glm::vec3(0.0f, 1.0f, 0.0f) * _deltaTime; // Move up
+	}
+	if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		Position -= glm::vec3(0.0f, 1.0f, 0.0f) * _deltaTime; // Move down
+	}
+	if (glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		Position -= glm::vec3(1.0f, 0.0f, 0.0f) * _deltaTime; // Move left
+	}
+	if (glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		Position += glm::vec3(1.0f, 0.0f, 0.0f) * _deltaTime; // Move right
+	}
+}
+
+// Callback function called in response to keyboard input. Processed during glfwPollEvents()
+void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods)
+{
+	if (_key == GLFW_KEY_ENTER && _action == GLFW_PRESS)
+	{
+		IsTextEntryActive = !IsTextEntryActive; // Toggle text entry mode when Enter is pressed
+		if (IsTextEntryActive)
+		{
+			glfwSetCharCallback(_window, TextInput); // Set the text input callback
+			std::cout << "Text entry mode activated." << std::endl;
+		}
+		else
+		{
+			glfwSetCharCallback(_window, nullptr); // Remove the text input callback
+			std::cout << "Text entry mode deactivated." << std::endl;
+		}
+	}
+	if (_key == GLFW_KEY_ESCAPE && _action == GLFW_PRESS)
+	{
+		glfwSetWindowShouldClose(_window, true); // Close the window when Escape is pressed
+	}
+	if (_key == GLFW_KEY_R && (_action == GLFW_REPEAT || _action == GLFW_PRESS))
+	{
+		RotationAngle += 10.0f; // Rotate the object by 10 degrees when R is pressed
+	}
+	if (_key == GLFW_KEY_T && _action == GLFW_PRESS)
+	{
+		Position = glm::vec3(0.0f, 0.0f, 0.0f); // Reset position when T is pressed
+	}
+}
+
+// Callback function called in response to mouse button input. Processed during glfwPollEvents()
+void MouseButtonInput(GLFWwindow* _window, int _button, int _action, int _mods)
+{
+	if (_button == GLFW_MOUSE_BUTTON_RIGHT && _action == GLFW_PRESS)
+	{
+		std::cout << "Mouse Button Right: Press" << std::endl;
+	}
+	if (_button == GLFW_MOUSE_BUTTON_RIGHT && _action == GLFW_RELEASE)
+	{
+		std::cout << "Mouse Button Right: Release" << std::endl;
+	}
+	if (_button == GLFW_MOUSE_BUTTON_MIDDLE && _action == GLFW_PRESS)
+	{
+		IsMousePositionActive = !IsMousePositionActive; // Toggle mouse position display
+		if (IsMousePositionActive)
+		{
+			glfwSetCursorPosCallback(_window, CursorPositionInput); // Set the cursor position callback
+			std::cout << "Mouse position tracking activated." << std::endl;
+		}
+		else
+		{
+			glfwSetCursorPosCallback(_window, nullptr); // Remove the cursor position callback
+			std::cout << "Mouse position tracking deactivated." << std::endl;
+		}
+	}
+}
+
+// Callback function called in response to keyboard input for text printing. Processed during glfwPollEvents()
+void TextInput(GLFWwindow* _window, unsigned int _codePoint)
+{
+	std::cout << "Text input detected: " << static_cast<unsigned char>(_codePoint) << std::endl;
+}
+
+// Callback function called in response to cursor position input. Processed during glfwPollEvents()
+void CursorPositionInput(GLFWwindow* _window, double _xpos, double _ypos)
+{
+	std::cout << "Cursor Position: (" << _xpos << ", " << _ypos << ")" << std::endl;
 }

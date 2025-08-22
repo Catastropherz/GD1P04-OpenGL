@@ -1,7 +1,9 @@
 #include "Camera.h"
 
-Camera::Camera()
+Camera::Camera(GLFWwindow* _window)
 {
+	Window = _window;
+	
 	position = glm::vec3(0.0f, 1.0f, 3.0f);
 	target = glm::vec3(0.0f, 0.0f, 0.0f);
 	upDirection = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -30,12 +32,27 @@ void Camera::Update(float _currentTime)
 		float speed = 0.5f;  // Radians per second
 
 		// Calculate new position in a circle around the target
-		float angle = _currentTime * speed;
+		float angle = TriBool() * _currentTime * speed; // based on input
 		position.x = target.x + radius * sin(angle);
 		position.z = target.z + radius * cos(angle);
 		previousTime = _currentTime;
 	}
 	viewMatrix = glm::lookAt(position, target, upDirection);
+}
+
+int Camera::TriBool()
+{
+	int ret = 0;
+	if (glfwGetKey(Window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		ret -= 1; // Move left
+	}
+	if (glfwGetKey(Window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		ret += 1; // Move right
+	}
+
+	return ret;
 }
 
 glm::mat4 Camera::GetViewMatrix() const
