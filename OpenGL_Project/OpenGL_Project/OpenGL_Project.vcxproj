@@ -73,6 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir)/Dependencies/GLFW;$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLM;$(ProjectDir)/Dependencies/STB;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)/Dependencies/GLFW;$(ProjectDir)/Dependencies/GLEW;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)/Dependencies/GLFW;$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLM;$(ProjectDir)/Dependencies/STB;$(IncludePath)</IncludePath>
