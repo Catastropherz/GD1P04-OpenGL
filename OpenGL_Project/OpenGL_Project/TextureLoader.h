@@ -4,12 +4,12 @@
 class TextureLoader
 {
 private:
-	int imageWidth, imageHeight, imageComponents;
-	unsigned char* imageData;
-	GLuint textureID;
+	int imageWidth = 0, imageHeight = 0, imageComponents = 0;
+	unsigned char* imageData = 0;
+	GLuint textureID = 0;
 
 	// Sprite sheet parameters
-	int frameIndex = 0, frameCount, SpriteSheetRow;
+	int frameIndex = 0, frameCount = 0, SpriteSheetColumn = 0, SpriteSheetRow = 0;
 	bool isSpriteSheet = false;
 	float previousTime = 0.0f;
 	float frameRate = 16.0f; // How many frame per second
@@ -24,11 +24,12 @@ public:
 	void SetTextureParameters(GLenum wrapS = GL_REPEAT, GLenum wrapT = GL_REPEAT, 
 		GLenum minFilter = GL_LINEAR_MIPMAP_LINEAR, GLenum magFilter = GL_LINEAR);
 	// Set sprite sheet parameters
-	void SetSpriteSheetParameters(int _frameCount, int _spriteSheetRow = 1)
+	void SetSpriteSheetParameters(int _spriteSheetColumn, int _spriteSheetRow = 1)
 	{
-		frameCount = _frameCount;
+		SpriteSheetColumn = _spriteSheetColumn;
 		SpriteSheetRow = _spriteSheetRow;
 		isSpriteSheet = true;
+		frameCount = SpriteSheetColumn * SpriteSheetRow;
 	}
 	// Animate sprite sheet
 	void AnimateSpriteSheet(float _currentTime);
@@ -43,5 +44,6 @@ public:
 	int GetFrameIndex() const { return frameIndex; }
 	int GetFrameCount() const { return frameCount; }
 	int GetSpriteSheetRow() const { return SpriteSheetRow; }
+	int GetSpriteSheetColumn() const { return SpriteSheetColumn; }
 };
 

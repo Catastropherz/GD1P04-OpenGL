@@ -17,10 +17,10 @@ const GLfloat Mesh::Vertices_Quad[32] = {
 
 const GLfloat Mesh::Vertices_QuadFlip[32] = {
 	// Index	// Position			// Color			// Texture Coords
-	/*0*/		-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,	1.0f, 0.0f,		// Top Left
-	/*1*/		-0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	1.0f, 1.0f,		// Btm Left
-	/*2*/		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	0.0f, 1.0f,		// Btm Right
-	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	0.0f, 0.0f,		// Top Right
+	/*0*/		-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,	1.0f, 1.0f,		// Top Left
+	/*1*/		-0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	1.0f, 0.0f,		// Btm Left
+	/*2*/		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	0.0f, 0.0f,		// Btm Right
+	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	0.0f, 1.0f,		// Top Right
 };
 
 const GLfloat Mesh::Vertices_QuadTile[32] = {
@@ -120,22 +120,22 @@ Mesh::Mesh(MeshType _type)
 		case QUAD_FLIP:
 		case QUAD_TILE:
 		{
-			glGenBuffers(1, &EBO_Quad);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_Quad);
+			glGenBuffers(1, &EBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);
 			break;
 		}
 		case HEX:
 		{
-			glGenBuffers(1, &EBO_Hex);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_Hex);
+			glGenBuffers(1, &EBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Hex), Indices_Hex, GL_STATIC_DRAW);
 			break;
 		}
 		case CUBE:
 		{
-			glGenBuffers(1, &EBO_Cube);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_Cube);
+			glGenBuffers(1, &EBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Cube), Indices_Cube, GL_STATIC_DRAW);
 			break;
 		}
@@ -203,6 +203,9 @@ Mesh::Mesh(MeshType _type)
 
 Mesh::~Mesh()
 {
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 }
 
 void Mesh::setModel(glm::vec3 _position, glm::vec3 _scale, float _angleDegrees)
@@ -238,13 +241,15 @@ void Mesh::Render()
 	glUseProgram(programToUse);
 
 	// Bind the VAO
-	glBindVertexArray(VAO);
+	glBindVertexArray(this->VAO);
 
 	// Send variables to the shaders via Uniform
 	glUniform1f(glGetUniformLocation(programToUse, "CurrentTime"), currentTime);
 	glUniform3fv(glGetUniformLocation(programToUse, "SolidColor"), 1, glm::value_ptr(solidColor));
 	glUniform1i(glGetUniformLocation(programToUse, "FrameIndex"), frameIndex);
 	glUniform1i(glGetUniformLocation(programToUse, "FrameCount"), frameCount);
+	glUniform1i(glGetUniformLocation(programToUse, "SpriteSheetRow"), spriteSheetRow);
+	glUniform1i(glGetUniformLocation(programToUse, "SpriteSheetColumn"), spriteSheetColumn);
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
@@ -265,7 +270,7 @@ void Mesh::Render()
 	{
 		case TRI:
 		{
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 			break;
 		}
 		case QUAD:
@@ -309,8 +314,17 @@ void Mesh::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionM
 	currentTime = _currentTime;
 
 	// Update texture variables
-	textureID = texture->GetTextureID();
-	frameIndex = texture->GetFrameIndex();
-	frameCount = texture->GetFrameCount();
+	if (texture != nullptr)
+	{
+		textureID = texture->GetTextureID();
+		frameIndex = texture->GetFrameIndex();
+		frameCount = texture->GetFrameCount();
+		spriteSheetRow = texture->GetSpriteSheetRow();
+		spriteSheetColumn = texture->GetSpriteSheetColumn();
+	}
+	else
+	{
+		std::cerr << "Error: Failed to load texture." << std::endl;
+	}
 
 }

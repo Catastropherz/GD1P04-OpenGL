@@ -11,9 +11,9 @@ Camera::Camera(GLFWwindow* _window)
 
 	// Calculate the View Matrix from the camera variables
 	//center = Look Direction
-	//	viewMatrix = glm::lookAt(position, position + lookDirection, upDirection);
+	viewMatrix = glm::lookAt(position, position + lookDirection, upDirection);
 	//center = TargetPos
-	viewMatrix = glm::lookAt(position, target, upDirection);
+	//viewMatrix = glm::lookAt(position, target, upDirection);
 	projectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 800.0f, 0.1f, 100.0f);
 }
 

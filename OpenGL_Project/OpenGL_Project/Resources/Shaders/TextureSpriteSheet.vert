@@ -9,6 +9,8 @@ layout (location = 2) in vec2 TexCoords;
 uniform mat4 ModelMat;
 uniform int FrameIndex;
 uniform int FrameCount;
+uniform int SpriteSheetRow;
+uniform int SpriteSheetColumn;
 
 // Outputs to Fragment Shader
 out vec3 FragColor;
@@ -21,9 +23,11 @@ void main()
 	FragColor = Color;
 
 	//Animation logic for sprite sheet
-	float frameWidth = 1.0f / float(FrameCount);
+	float frameHeight = 1.0f / float(SpriteSheetRow);
+	float frameWidth = 1.0f / float(SpriteSheetColumn);
 	vec2 frame = TexCoords;
-	frame.x = (float(FrameIndex) + TexCoords.x) * frameWidth;
+	frame.x = (float(FrameIndex%(FrameCount/SpriteSheetRow)) + TexCoords.x) * frameWidth;
+	frame.y = (float((FrameCount/SpriteSheetRow) - FrameIndex/(FrameCount/SpriteSheetRow) - 1) + TexCoords.y) * frameHeight;
 
 	FragTexCoords = frame;
 }

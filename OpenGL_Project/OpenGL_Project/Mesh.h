@@ -29,9 +29,7 @@ private:
 
 	GLuint VBO = 0;
 	GLuint VAO = 0;
-	GLuint EBO_Quad = 0;
-	GLuint EBO_Hex = 0;
-	GLuint EBO_Cube = 0;
+	GLuint EBO = 0;
 
 	MeshType type;
 
@@ -60,6 +58,8 @@ private:
 	GLuint textureID = 0;
 	int frameIndex = 0;
 	int frameCount = 0;
+	int spriteSheetRow = 0;
+	int spriteSheetColumn = 0;
 	TextureLoader* secondTexture = nullptr;
 
 public:

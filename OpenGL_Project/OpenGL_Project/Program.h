@@ -14,6 +14,8 @@ public:
 	GLuint Program_SpriteSheet = 0;
 	GLuint Program_ClipSpace = 0;
 
+	GLuint VAO = 0;
+
     Program();
     ~Program();
 
