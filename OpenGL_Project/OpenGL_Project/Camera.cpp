@@ -14,7 +14,8 @@ Camera::Camera(GLFWwindow* _window)
 	viewMatrix = glm::lookAt(position, position + lookDirection, upDirection);
 	//center = TargetPos
 	//viewMatrix = glm::lookAt(position, target, upDirection);
-	projectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 800.0f, 0.1f, 100.0f);
+	//projectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 800.0f, 0.1f, 100.0f);
+	projectionMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, 0.1f, 100.0f);
 }
 
 Camera::~Camera()
@@ -28,16 +29,16 @@ void Camera::Update(float _currentTime)
 	if (deltaTime > frameTime) // Adjust the frame rate as needed
 	{
 		// Update the camera position
-		float radius = 3.0f; // Distance from target
-		float speed = 0.5f;  // Radians per second
+		float amplitude = 80.0f; // Amplitude of the oscillation
+		float speed = 1.5f;  // Radians per second
 
-		// Calculate new position in a circle around the target
-		float angle = TriBool() * _currentTime * speed; // based on input
-		position.x = target.x + radius * sin(angle);
-		position.z = target.z + radius * cos(angle);
+		// Oscillate the camera left and right using a sine wave
+		position.x = amplitude * sin(speed * _currentTime);
+
 		previousTime = _currentTime;
 	}
-	viewMatrix = glm::lookAt(position, target, upDirection);
+	//viewMatrix = glm::lookAt(position, target, upDirection);
+	viewMatrix = glm::lookAt(position, position + lookDirection, upDirection);
 }
 
 int Camera::TriBool()

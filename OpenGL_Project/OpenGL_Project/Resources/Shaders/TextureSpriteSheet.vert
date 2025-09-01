@@ -7,6 +7,8 @@ layout (location = 2) in vec2 TexCoords;
 
 // Inputs
 uniform mat4 ModelMat;
+uniform mat4 ViewMat;
+uniform mat4 ProjectionMat;
 uniform int FrameIndex;
 uniform int FrameCount;
 uniform int SpriteSheetRow;
@@ -19,7 +21,7 @@ out vec2 FragTexCoords;
 //Shader Functionality
 void main()
 {
-	gl_Position = ModelMat * vec4(Position, 1.0);
+	gl_Position = ProjectionMat * ViewMat * ModelMat * vec4(Position, 1.0);
 	FragColor = Color;
 
 	//Animation logic for sprite sheet

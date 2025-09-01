@@ -3,7 +3,7 @@
 
 GLFWwindow* Window = nullptr;
 
-void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _windowHeight);
+void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
 void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _meshArray[], int _meshCount);
 void ProcessInput(float _deltaTime);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
@@ -14,9 +14,7 @@ void CursorPositionInput(GLFWwindow* _window, double _xpos, double _ypos);
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
-//glm::vec3 Scale = glm::vec3(200.0f, 200.0f, 200.0f); // pixel scale
 float RotationAngle = 0.0f; // Degrees
-
 
 // Window
 int WindowWidth = 800;
@@ -34,6 +32,7 @@ glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 TextureLoader texture0;
 TextureLoader texture1;
 TextureLoader texture2;
+TextureLoader texture3;
 //--------------------------------------------------
 
 int main()
@@ -74,34 +73,35 @@ int main()
 	float PreviousTime = 0.0f;
 	float DeltaTime = 0.0f;
 	Camera camera(Window);
-	InitialSetup(&program, &camera, WindowWidth, WindowHeight);
+	InitialSetup(&camera, WindowWidth, WindowHeight);
 
 	// Create mesh objects
 	Mesh meshTile(QUAD_TILE);
-	meshTile.setModel(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.5f, 0.5f, 1.0f), RotationAngle);
+	meshTile.setModel(glm::vec3(-170.0f, 200.0f, 0.0f), glm::vec3(250.0f, 250.0f, 1.0f), RotationAngle);
 	meshTile.setProgram(&program.Program_Texture);
 	meshTile.setTexture(&texture0);
 
 	Mesh meshMixed(QUAD);
-	meshMixed.setModel(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(0.5f, 0.5f, 1.0f), RotationAngle);
+	meshMixed.setModel(glm::vec3(200.0f, 200.0f, 0.0f), glm::vec3(200.0f, 200.0f, 1.0f), RotationAngle);
 	meshMixed.setProgram(&program.Program_TextureMix);
 	meshMixed.setTexture(&texture0);
 	meshMixed.setSecondTexture(&texture1);
 
 	Mesh meshQuad(QUAD);
-	meshQuad.setModel(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.4f, 0.4f, 1.0f), RotationAngle);
+	meshQuad.setModel(glm::vec3(-220.0, -200.0, 0.0f), glm::vec3(160.0f, 160.0f, 1.0f), RotationAngle);
 	meshQuad.setProgram(&program.Program_Texture);
 	meshQuad.setTexture(&texture1);
 
 	Mesh meshFlip(QUAD_FLIP);
-	meshFlip.setModel(glm::vec3(-0.1f, -0.5f, 0.0f), glm::vec3(0.4f, 0.4f, 1.0f), RotationAngle);
+	meshFlip.setModel(glm::vec3(-80.0f, -200.0f, 0.0f), glm::vec3(160.0f, 160.0f, 1.0f), RotationAngle);
 	meshFlip.setProgram(&program.Program_Texture);
 	meshFlip.setTexture(&texture1);
 
 	Mesh meshAnim(QUAD);
-	meshAnim.setModel(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.5f, 0.5f, 1.0f), RotationAngle);
+	meshAnim.setModel(glm::vec3(180.0f, -180.0f, 0.0f), glm::vec3(240.0f, 240.0f, 1.0f), RotationAngle);
 	meshAnim.setProgram(&program.Program_SpriteSheet);
 	meshAnim.setTexture(&texture2);
+
 
 	// Create an array containing all the mesh objects
 	Mesh* meshArray[] = { &meshTile, &meshMixed, &meshQuad, &meshFlip, &meshAnim };
@@ -119,7 +119,7 @@ int main()
 			// Clear buffer
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-			// Set variables
+			// Render
 			meshTile.Render();
 			meshMixed.Render();
 			meshQuad.Render();
@@ -142,7 +142,7 @@ int main()
 }
 
 
-void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _windowHeight)
+void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 {
 	// Set the clear color
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -175,15 +175,16 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	// Anchor top left --------
 	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 100.0f);
 	// Anchor center --------
-	 //_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
+	_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
 	// Perspective projection
-	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
+	//_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
 
 	// TEXTURE SETUP ---------------------------------
 	texture0.LoadTexture("Resources/Textures/PepeSad.png");
 	texture1.LoadTexture("Resources/Textures/PepeCry.png");
 	texture2.LoadTexture("Resources/Textures/RobotSpriteSheet2D.png");
 	texture2.SetSpriteSheetParameters(8, 2);
+	texture3.LoadTexture("Resources/Textures/ColorPickerOld.png");
 
 	// Enable blending
 	glEnable(GL_BLEND);
