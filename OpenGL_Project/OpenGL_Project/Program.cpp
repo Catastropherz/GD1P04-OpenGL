@@ -2,10 +2,6 @@
 
 Program::Program()
 {
-    //Generate VAO
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    
     Program_FixedTri = ShaderLoader::CreateProgram( "Resources/Shaders/FixedTriangle.vert", 
                                                     "Resources/Shaders/FixedColor.frag");
     Program_PositionOnly = ShaderLoader::CreateProgram( "Resources/Shaders/PositionOnly.vert", 
@@ -24,7 +20,6 @@ Program::Program()
 		                                                "Resources/Shaders/Texture.frag");
     Program_ClipSpace = ShaderLoader::CreateProgram(   "Resources/Shaders/ClipSpace.vert", 
 		                                                "Resources/Shaders/Texture.frag");
-
 }
 
 Program::~Program()

@@ -1,9 +1,23 @@
+/***********************************************************************
+ Bachelor of Software Engineering
+ Media Design School
+ Auckland
+ New Zealand
+ (c)
+ 2024 Media Design School
+ File Name : main.cpp
+ Description : Problem_003_1
+ Author : Q Sivakorn Tuangwilai
+ Mail : sivakorn.tuangwilai@mds.ac.nz
+ **************************************************************************/
+
 #include "Mesh.h"
 
 
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
+void Render(Mesh* _meshArray[], int _meshCount);
 void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _meshArray[], int _meshCount);
 void ProcessInput(float _deltaTime);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
@@ -116,22 +130,7 @@ int main()
 		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime, meshArray, meshCount);
 
 		// Render all objects
-			// Clear buffer
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-			// Render
-			meshTile.Render();
-			meshMixed.Render();
-			meshQuad.Render();
-			meshFlip.Render();
-			meshAnim.Render();
-
-			// Animate sprite sheet
-			texture2.AnimateSpriteSheet(CurrentTime);
-		
-			// Swap the front and back buffers
-			glfwSwapBuffers(Window);
-		// End of render
+		Render(meshArray, meshCount);
 	}
 	// End of Main Loop ****************************************
 
@@ -141,7 +140,22 @@ int main()
 	return 0;
 }
 
+// Render function to render all objects
+void Render(Mesh* _meshArray[], int _meshCount)
+{
+	// Clear buffer
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	for (int i = 0; i < _meshCount; ++i)
+	{
+		_meshArray[i]->Render();
+	}
+
+	// Swap the front and back buffers
+	glfwSwapBuffers(Window);
+}
+
+// Initial setup function to configure OpenGL settings and objects
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 {
 	// Set the clear color
@@ -191,6 +205,7 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+// Update function to update all objects
 void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _meshArray[], int _meshCount)
 {
 	// Check for any events like key presses or mouse movements

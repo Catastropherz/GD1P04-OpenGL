@@ -1,3 +1,15 @@
+/***********************************************************************
+ Bachelor of Software Engineering
+ Media Design School
+ Auckland
+ New Zealand
+ (c)
+ 2024 Media Design School
+ File Name : TextureLoader.h
+ Description : Handle texture loading and sprite sheet animation
+ Author : Q Sivakorn Tuangwilai
+ Mail : sivakorn.tuangwilai@mds.ac.nz
+ **************************************************************************/
 #pragma once
 #include "Program.h"
 
