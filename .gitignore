@@ -3,3 +3,7 @@ OpenGL_Project/x64
 OpenGL_Project/OpenGL_Project/x64
 Release Build
 Source
+OpenGL_Project/OpenGL_Project/Debug
+OpenGL_Project/OpenGL_Project/OpenGL_Project.exe
+OpenGL_Project/OpenGL_Project/OpenGL_Project.pdb
+*.zip
