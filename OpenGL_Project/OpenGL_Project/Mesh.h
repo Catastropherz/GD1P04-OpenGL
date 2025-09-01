@@ -38,21 +38,24 @@ private:
 	float RotationAngle = 0.0f; // Degrees
 
 	// Model Matrix
-	glm::mat4 TranslationMat;
-	glm::mat4 RotationMat;
-	glm::mat4 ScaleMat;
-	glm::mat4 ModelMat;
+	glm::mat4 TranslationMat = glm::mat4(0.0f);
+	glm::mat4 RotationMat = glm::mat4(0.0f);
+	glm::mat4 ScaleMat = glm::mat4(0.0f);
+	glm::mat4 ModelMat = glm::mat4(0.0f);
 
 
 	// Uniform variables
-	GLuint programToUse;
+	GLuint programToUse = 0;
 	float currentTime = 0.0f;
-	glm::vec3 solidColor;
+	glm::vec3 solidColor = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::mat4 viewMatrix = glm::mat4(0.0f);
+	glm::mat4 projectionMatrix = glm::mat4(0.0f);
+	
+	// Texture
+	TextureLoader* texture = nullptr;
+	GLuint textureID = 0;
 	int frameIndex = 0;
 	int frameCount = 0;
-	glm::mat4 viewMatrix;
-	glm::mat4 projectionMatrix;
-	GLuint textureID;
 
 public:
 
@@ -63,16 +66,11 @@ public:
 	void setModel(glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 _scale = glm::vec3(1.0f, 1.0f, 1.0f), float _angleDegrees = 0.0f);
 	
 	void setProgram(GLuint* _program);
-	void setCurrentTime(float* _currentTime);
 	void setSolidColor(glm::vec3* _solidColor);
-	void setFrameIndex(int _frameIndex);
-	void setFrameCount(int _frameCount);
-	void setViewMatrix(glm::mat4 _viewMat);
-	void setProjectionMatrix(glm::mat4 _projectionMat);
-	void setTextureID(GLuint _textureID);
+	void setTexture(TextureLoader* _texture);
 
 	void Render();
-	void Update();
+	void Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat);
 
 };
 

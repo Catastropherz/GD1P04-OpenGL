@@ -77,6 +77,9 @@ int main()
 
 	// Create mesh objects
 	Mesh meshCube(CUBE);
+	meshCube.setModel(Position, Scale, RotationAngle);
+	meshCube.setProgram(&program.Program_ClipSpace);
+	meshCube.setTexture(&texture0);
 
 	// Main Loop ***********************************************
 	while (glfwWindowShouldClose(Window) == false)
@@ -89,16 +92,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		// Set variables
-		meshCube.setModel(Position, Scale, RotationAngle);
-		meshCube.setProgram(&program.Program_ClipSpace);
-		meshCube.setCurrentTime(&CurrentTime);
-		meshCube.setSolidColor(&SolidColorRed);
-		meshCube.setFrameIndex(texture0.GetFrameIndex());
-		meshCube.setFrameCount(texture0.GetFrameCount());
-		meshCube.setViewMatrix(camera.GetViewMatrix());
-		meshCube.setProjectionMatrix(camera.GetProjectionMatrix());
-		meshCube.setTextureID(texture0.GetTextureID());
-
 		meshCube.Render();
 		
 		// Swap the front and back buffers
@@ -175,7 +168,7 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 	ProcessInput(*_deltaTime);
 
 	// Update object components
-	_mesh->Update();
+	_mesh->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix());
 
 	// Animate sprite sheet
 	texture0.AnimateSpriteSheet(*_currentTime);

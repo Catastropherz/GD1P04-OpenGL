@@ -191,39 +191,14 @@ void Mesh::setProgram(GLuint* _program)
 	programToUse = *_program;
 }
 
-void Mesh::setCurrentTime(float* _currentTime)
-{
-	currentTime = *_currentTime;
-}
-
 void Mesh::setSolidColor(glm::vec3* _solidColor)
 {
 	solidColor = *_solidColor;
 }
 
-void Mesh::setFrameIndex(int _frameIndex)
+void Mesh::setTexture(TextureLoader* _texture)
 {
-	frameIndex = _frameIndex;
-}
-
-void Mesh::setFrameCount(int _frameCount)
-{
-	frameCount = _frameCount;
-}
-
-void Mesh::setViewMatrix(glm::mat4 _viewMat)
-{
-	viewMatrix = _viewMat;
-}
-
-void Mesh::setProjectionMatrix(glm::mat4 _projectionMat)
-{
-	projectionMatrix = _projectionMat;
-}
-
-void Mesh::setTextureID(GLuint _textureID)
-{
-	textureID = _textureID;
+	texture = _texture;
 }
 
 void Mesh::Render()
@@ -278,7 +253,7 @@ void Mesh::Render()
 	glUseProgram(0);
 }
 
-void Mesh::Update()
+void Mesh::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat)
 {
 	// Calculate the Model Matrix
 	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
@@ -286,4 +261,17 @@ void Mesh::Update()
 	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
 
 	ModelMat = TranslationMat * RotationMat * ScaleMat;
+
+	// Update caamera variables
+	viewMatrix = _viewMat;
+	projectionMatrix = _projectionMat;
+
+	// Update time variable
+	currentTime = _currentTime;
+
+	// Update texture variables
+	textureID = texture->GetTextureID();
+	frameIndex = texture->GetFrameIndex();
+	frameCount = texture->GetFrameCount();
+
 }
