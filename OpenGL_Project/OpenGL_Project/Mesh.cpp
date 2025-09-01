@@ -15,6 +15,22 @@ const GLfloat Mesh::Vertices_Quad[32] = {
 	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	1.0f, 1.0f,		// Top Right
 };
 
+const GLfloat Mesh::Vertices_QuadFlip[32] = {
+	// Index	// Position			// Color			// Texture Coords
+	/*0*/		-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,	1.0f, 0.0f,		// Top Left
+	/*1*/		-0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	1.0f, 1.0f,		// Btm Left
+	/*2*/		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	0.0f, 1.0f,		// Btm Right
+	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	0.0f, 0.0f,		// Top Right
+};
+
+const GLfloat Mesh::Vertices_QuadTile[32] = {
+	// Index	// Position			// Color			// Texture Coords
+	/*0*/		-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,	-1.0f, 1.0f,		// Top Left
+	/*1*/		-0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	-1.0f, -1.0f,		// Btm Left
+	/*2*/		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	1.0f, -1.0f,		// Btm Right
+	/*3*/		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 1.0f,	1.0f, 1.0f,		// Top Right
+};
+
 const GLuint Mesh::Indices_Quad[6] = {
 		0, 1, 2, // First Triangle (TL > BL > BR)
 		0, 2, 3, // Second Triangle (TL > BR > TR)
@@ -101,6 +117,8 @@ Mesh::Mesh(MeshType _type)
 	switch (type)
 	{
 		case QUAD:
+		case QUAD_FLIP:
+		case QUAD_TILE:
 		{
 			glGenBuffers(1, &EBO_Quad);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_Quad);
@@ -141,8 +159,16 @@ Mesh::Mesh(MeshType _type)
 			break;
 		}
 		case QUAD:
+		case QUAD_FLIP:
+		case QUAD_TILE:
 		{
-			glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW); //Quad
+			if (type == QUAD)
+				glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW);
+			else if (type == QUAD_FLIP)
+				glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_QuadFlip), Vertices_QuadFlip, GL_STATIC_DRAW);
+			else if (type == QUAD_TILE)
+				glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_QuadTile), Vertices_QuadTile, GL_STATIC_DRAW);
+
 			// Set the vertex attribute pointers
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 			glEnableVertexAttribArray(0);
@@ -201,6 +227,11 @@ void Mesh::setTexture(TextureLoader* _texture)
 	texture = _texture;
 }
 
+void Mesh::setSecondTexture(TextureLoader* _texture)
+{
+	secondTexture = _texture;
+}
+
 void Mesh::Render()
 {
 	// Bind the Program
@@ -222,6 +253,12 @@ void Mesh::Render()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glUniform1i(glGetUniformLocation(programToUse, "Texture0"), 0);
+	if (secondTexture != nullptr)
+	{
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, secondTexture->GetTextureID());
+		glUniform1i(glGetUniformLocation(programToUse, "Texture1"), 1);
+	}
 
 	// Render based on mesh type
 	switch (type)
@@ -232,6 +269,8 @@ void Mesh::Render()
 			break;
 		}
 		case QUAD:
+		case QUAD_FLIP:
+		case QUAD_TILE:
 		{
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			break;

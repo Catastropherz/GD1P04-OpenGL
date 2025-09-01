@@ -4,7 +4,7 @@
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _windowHeight);
-void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _mesh);
+void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _mesh0);
 void ProcessInput(float _deltaTime);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
 void TextInput(GLFWwindow* _window, unsigned int _codePoint);
@@ -76,27 +76,28 @@ int main()
 	InitialSetup(&program, &camera, WindowWidth, WindowHeight);
 
 	// Create mesh objects
-	Mesh meshCube(CUBE);
-	meshCube.setModel(Position, Scale, RotationAngle);
-	meshCube.setProgram(&program.Program_ClipSpace);
-	meshCube.setTexture(&texture0);
+	Mesh meshTile(QUAD_TILE);
+	meshTile.setModel(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.5f, 0.5f, 1.0f), RotationAngle);
+	meshTile.setProgram(&program.Program_Texture);
+	meshTile.setTexture(&texture0);
+
 
 	// Main Loop ***********************************************
 	while (glfwWindowShouldClose(Window) == false)
 	{
-	//// Update all objects and run the processes
-		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime, &meshCube);
+		// Update all objects and run the processes
+		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime, &meshTile);
 
-	//// Render all objects
-		// Clear buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// Render all objects
+			// Clear buffer
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		// Set variables
-		meshCube.Render();
+			// Set variables
+			meshTile.Render();
 		
-		// Swap the front and back buffers
-		glfwSwapBuffers(Window);
-	//// End of render
+			// Swap the front and back buffers
+			glfwSwapBuffers(Window);
+		// End of render
 	}
 	// End of Main Loop ****************************************
 
@@ -145,16 +146,16 @@ void InitialSetup(Program* _program, Camera* _camera, int _windowWidth, int _win
 	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
 
 	// TEXTURE SETUP ---------------------------------
-	texture0.LoadTexture("Resources/Textures/ColorPickerOld.png");
+	texture0.LoadTexture("Resources/Textures/PepeSad.png");
 	//texture0.SetSpriteSheetParameters(7);
-	//texture1.LoadTexture("Resources/Textures/Run (1).png");
+	texture1.LoadTexture("Resources/Textures/PepeCry.png");
 
 	// Enable blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _mesh)
+void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _mesh0)
 {
 	// Check for any events like key presses or mouse movements
 	glfwPollEvents();
@@ -168,7 +169,7 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 	ProcessInput(*_deltaTime);
 
 	// Update object components
-	_mesh->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix());
+	_mesh0->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix());
 
 	// Animate sprite sheet
 	texture0.AnimateSpriteSheet(*_currentTime);

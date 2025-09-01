@@ -6,6 +6,8 @@ enum MeshType
 {
 	TRI,
 	QUAD,
+	QUAD_FLIP,
+	QUAD_TILE,
 	HEX,
 	CUBE
 };
@@ -16,6 +18,8 @@ private:
 	// Vertices / Indices --------------------------
 	static const GLfloat Vertices_Tri[18];
 	static const GLfloat Vertices_Quad[32];
+	static const GLfloat Vertices_QuadFlip[32];
+	static const GLfloat Vertices_QuadTile[32];
 	static const GLuint Indices_Quad[6];
 
 	static const GLfloat Vertices_Hex[42];
@@ -56,6 +60,7 @@ private:
 	GLuint textureID = 0;
 	int frameIndex = 0;
 	int frameCount = 0;
+	TextureLoader* secondTexture = nullptr;
 
 public:
 
@@ -68,6 +73,7 @@ public:
 	void setProgram(GLuint* _program);
 	void setSolidColor(glm::vec3* _solidColor);
 	void setTexture(TextureLoader* _texture);
+	void setSecondTexture(TextureLoader* _texture);
 
 	void Render();
 	void Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat);

@@ -14,5 +14,6 @@ out vec4 FinalColor;
 
 void main()
 {
-	FinalColor = mix(texture(Texture0, FragTexCoords), texture(Texture1, FragTexCoords), abs(sin(CurrentTime)));
+	float blend = 0.5 * sin(CurrentTime) + 0.5;
+	FinalColor = mix(texture(Texture0, FragTexCoords), texture(Texture1, FragTexCoords), blend);
 }

@@ -20,6 +20,7 @@ Program::Program()
 		                                                "Resources/Shaders/Texture.frag");
     Program_ClipSpace = ShaderLoader::CreateProgram(   "Resources/Shaders/ClipSpace.vert", 
 		                                                "Resources/Shaders/Texture.frag");
+
 }
 
 Program::~Program()
