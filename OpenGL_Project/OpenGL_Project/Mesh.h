@@ -1,3 +1,16 @@
+/***********************************************************************
+ Bachelor of Software Engineering
+ Media Design School
+ Auckland
+ New Zealand
+ (c)
+ 2024 Media Design School
+ File Name : Mesh.h
+ Description : Handle mesh creation, rendering, and updating
+ Author : Q Sivakorn Tuangwilai
+ Mail : sivakorn.tuangwilai@mds.ac.nz
+ **************************************************************************/
+
 #pragma once
 #include "TextureLoader.h"
 #include "Camera.h"
@@ -70,12 +83,22 @@ public:
 	// Set position, scale, rotation of the mesh
 	void setModel(glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 _scale = glm::vec3(1.0f, 1.0f, 1.0f), float _angleDegrees = 0.0f);
 	
+	// Set the shader program to use
 	void setProgram(GLuint* _program);
+
+	// Set solid color for the mesh
 	void setSolidColor(glm::vec3* _solidColor);
+
+	// Set texture for the mesh
 	void setTexture(TextureLoader* _texture);
+
+	// Set second texture for the mesh (for mixing)
 	void setSecondTexture(TextureLoader* _texture);
 
+	// Render the mesh
 	void Render();
+
+	// Update uniform variables
 	void Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat);
 
 };

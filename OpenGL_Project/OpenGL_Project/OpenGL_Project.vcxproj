@@ -142,20 +142,10 @@
     <ClCompile Include="TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Shaders\Assignment1_Color.frag" />
-    <None Include="Resources\Shaders\Assignment1_WorldSpace.vert" />
-    <None Include="Resources\Shaders\Assignment2.vert" />
-    <None Include="Resources\Shaders\ClipSpace.vert" />
-    <None Include="Resources\Shaders\FixedColor.frag" />
-    <None Include="Resources\Shaders\FixedTriangle.vert" />
-    <None Include="Resources\Shaders\PositionOnly.vert" />
     <None Include="Resources\Shaders\Texture.frag" />
     <None Include="Resources\Shaders\Texture.vert" />
     <None Include="Resources\Shaders\TextureMix.frag" />
     <None Include="Resources\Shaders\TextureSpriteSheet.vert" />
-    <None Include="Resources\Shaders\VertexColor.frag" />
-    <None Include="Resources\Shaders\VertexColorFade.frag" />
-    <None Include="Resources\Shaders\WorldSpace.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />

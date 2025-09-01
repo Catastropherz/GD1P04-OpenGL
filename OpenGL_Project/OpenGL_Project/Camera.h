@@ -24,11 +24,22 @@ public:
 	Camera(GLFWwindow* _window);
 	~Camera();
 
+	// Update the camera's position and orientation
 	void Update(float _currentTime);
+	
+	// Returns -1 for left, 0 for no movement, and 1 for right
 	int TriBool();
+	
+	// Getter functions for the View Matrix
 	glm::mat4 GetViewMatrix() const;
+
+	// Getter function for the Projection Matrix
 	glm::mat4 GetProjectionMatrix() const;
+
+	// Setter functions for the Projection Matrix (Perspective)
 	void SetProjectionMatrix_Perspective(int _width, int _height, float _fov = 45.0f, float _nearPlane = 0.1f, float _farPlane = 100.0f);
+	
+	// Setter functions for the Projection Matrix (Orthographic)
 	void SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top, float _nearPlane = 0.1f, float _farPlane = 100.0f);
 };
 
