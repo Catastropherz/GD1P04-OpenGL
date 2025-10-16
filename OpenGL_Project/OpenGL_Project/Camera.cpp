@@ -30,7 +30,7 @@ void Camera::Update(float _currentTime)
 	{
 		// Orbital movement parameters
 		float amplitude = 50.0f; // Amplitude of the oscillation
-		float speed = 1.5f;  // Radians per second
+		float speed = 0.5f;  // Radians per second
 
 		// Orbital movement around the origin
 		position.x = amplitude * sin(speed * _currentTime);

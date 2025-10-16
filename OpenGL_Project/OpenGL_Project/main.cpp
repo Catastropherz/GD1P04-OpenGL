@@ -11,13 +11,13 @@
  Mail : sivakorn.tuangwilai@mds.ac.nz
  **************************************************************************/
 
-#include "Mesh.h"
+#include "SkyBox.h"
 
 
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
-void Render(Mesh* _meshArray[], int _meshCount);
+void Render(SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount);
 void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _meshArray[], int _meshCount);
 void ProcessInput(float _deltaTime);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
@@ -92,6 +92,21 @@ int main()
 	Camera camera(Window);
 	InitialSetup(&camera, WindowWidth, WindowHeight);
 
+	// Load and set up the objects ---------------------------------
+
+	// Skybox
+	std::string skyboxFaces[6] =
+	{
+		"Resources/Textures/Skybox/right.png",
+		"Resources/Textures/Skybox/left.png",
+		"Resources/Textures/Skybox/top.png",
+		"Resources/Textures/Skybox/bot.png",
+		"Resources/Textures/Skybox/back.png",
+		"Resources/Textures/Skybox/front.png"
+	};
+	SkyBox skybox(&camera, skyboxFaces);
+
+
 	// Create mesh objects
 	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
 	meshBarrel.setModel(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(20.0f, 20.0f, 20.0f), RotationAngle);
@@ -116,7 +131,7 @@ int main()
 		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime, meshArray, meshCount);
 
 		// Render all objects
-		Render(meshArray, meshCount);
+		Render(&skybox ,meshArray, meshCount);
 	}
 	// End of Main Loop ****************************************
 
@@ -127,15 +142,19 @@ int main()
 }
 
 // Render function to render all objects
-void Render(Mesh* _meshArray[], int _meshCount)
+void Render(SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount)
 {
 	// Clear buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Render skybox first
+	_skybox->RenderSkybox();
 
 	for (int i = 0; i < _meshCount; ++i)
 	{
 		_meshArray[i]->Render();
 	}
+
 
 	// Swap the front and back buffers
 	glfwSwapBuffers(Window);
