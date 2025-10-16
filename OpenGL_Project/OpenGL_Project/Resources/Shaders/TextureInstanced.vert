@@ -4,7 +4,8 @@
 layout (location = 0) in vec3 Position;
 layout (location = 1) in vec3 Color;
 layout (location = 2) in vec2 TexCoords;
-layout (location = 3) in mat4 InstanceModelMat;
+layout (location = 3) in vec3 Normal;
+layout (location = 4) in mat4 InstanceModelMat;
 
 // Inputs
 uniform mat4 ProjectionMat;
@@ -13,11 +14,16 @@ uniform mat4 ViewMat;
 // Outputs to Fragment Shader
 out vec3 FragColor;
 out vec2 FragTexCoords;
+out vec3 FragNormal;
+out vec3 FragPos;
 
 //Shader Functionality
 void main()
 {
 	gl_Position = ProjectionMat * ViewMat * InstanceModelMat * vec4(Position, 1.0);
+
 	FragColor = Color;
 	FragTexCoords = TexCoords;
+	FragNormal = mat3(transpose(inverse(InstanceModelMat))) * Normal;
+	FragPos = vec3(InstanceModelMat * vec4(Position, 1.0));
 }

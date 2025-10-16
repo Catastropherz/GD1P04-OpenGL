@@ -33,6 +33,8 @@ private:
 
 	float previousTime = 0.0f;
 	float frameRate = 60.0f; // Frames per second
+
+	bool isOrbiting = true; // Orbiting movement around the origin
 public:
 	Camera(GLFWwindow* _window);
 	~Camera();
@@ -48,6 +50,9 @@ public:
 
 	// Getter function for the Projection Matrix
 	glm::mat4 GetProjectionMatrix() const;
+
+	// Getter function for the Camera Position
+	glm::vec3 GetCameraPosition() const;
 
 	// Setter functions for the Projection Matrix (Perspective)
 	void SetProjectionMatrix_Perspective(int _width, int _height, float _fov = 45.0f, float _nearPlane = 0.1f, float _farPlane = 100.0f);

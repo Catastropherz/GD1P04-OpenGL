@@ -22,6 +22,10 @@ Program::Program()
 		                                                "Resources/Shaders/Texture.frag");
     Program_TextureInstanced = ShaderLoader::CreateProgram( "Resources/Shaders/TextureInstanced.vert",
 		                                                    "Resources/Shaders/Texture.frag");
+    Program_TexLight = ShaderLoader::CreateProgram( "Resources/Shaders/Texture.vert",
+		                                            "Resources/Shaders/Lighting_BlinnPhong.frag");
+    Program_TexLightInstanced = ShaderLoader::CreateProgram(    "Resources/Shaders/TextureInstanced.vert",
+		                                                        "Resources/Shaders/Lighting_BlinnPhong.frag");
 }
 
 Program::~Program()

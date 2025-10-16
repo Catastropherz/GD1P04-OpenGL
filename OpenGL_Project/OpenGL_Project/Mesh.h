@@ -32,17 +32,21 @@ struct VertexStandard
 public:
 	glm::vec3 position;
 	glm::vec2 texcoord;
+	glm::vec3 normal;
 
 	VertexStandard()
 	{
 		position = glm::vec3(0.0f);
 		texcoord = glm::vec2(0.0f);
+		normal = glm::vec3(0.0f);
 	};
 
-	VertexStandard(glm::vec3 _position, glm::vec2 _texcoord)
+	VertexStandard(glm::vec3 _position, glm::vec2 _texcoord, glm::vec3 _normal)
 	{
 		position = _position;
 		texcoord = _texcoord;
+		normal = _normal;
+
 	};
 };
 
@@ -104,6 +108,9 @@ private:
 	int spriteSheetColumn = 0;
 	TextureLoader* secondTexture = nullptr;
 
+	// Camera
+	glm::vec3 cameraPosition = glm::vec3(0.0f);
+
 public:
 
 	Mesh(MeshType _type);
@@ -129,7 +136,7 @@ public:
 	void Render();
 
 	// Update uniform variables
-	void Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat);
+	void Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat, Camera* _camera);
 
 	// Generate model matrix instances for instanced rendering
 	void GenerateModelMatInstances(int _count);

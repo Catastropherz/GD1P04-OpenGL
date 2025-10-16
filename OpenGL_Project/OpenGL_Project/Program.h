@@ -26,6 +26,8 @@ public:
 	GLuint Program_SpriteSheet = 0;
 	GLuint Program_ClipSpace = 0;
 	GLuint Program_TextureInstanced = 0;
+	GLuint Program_TexLight = 0;
+	GLuint Program_TexLightInstanced = 0;
 
     Program();
     ~Program();

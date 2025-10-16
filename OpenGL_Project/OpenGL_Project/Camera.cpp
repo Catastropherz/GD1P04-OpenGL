@@ -28,7 +28,7 @@ void Camera::Update(float _currentTime)
 	float frameTime = 1.0f / frameRate; // Calculate the time per frame based on the frame rate
 	if (deltaTime > frameTime) // Adjust the frame rate as needed
 	{
-		// Update the camera position
+		// Orbital movement parameters
 		float amplitude = 50.0f; // Amplitude of the oscillation
 		float speed = 1.5f;  // Radians per second
 
@@ -72,6 +72,11 @@ glm::mat4 Camera::GetProjectionMatrix() const
     return projectionMatrix;
 }
 
+glm::vec3 Camera::GetCameraPosition() const
+{
+	return position;
+}
+
 void Camera::SetProjectionMatrix_Perspective(int _width, int _height, float _fov, float _nearPlane, float _farPlane)
 {
 	projectionMatrix = glm::perspective(glm::radians(_fov), static_cast<float>(_width) / static_cast<float>(_height), _nearPlane, _farPlane);
@@ -81,3 +86,5 @@ void Camera::SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom
 {
 	projectionMatrix = glm::ortho(static_cast<float>(_left), static_cast<float>(_right), static_cast<float>(_bottom), static_cast<float>(_top), _nearPlane, _farPlane);
 }
+
+

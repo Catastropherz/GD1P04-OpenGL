@@ -260,6 +260,14 @@ Mesh::Mesh(std::string _filePath, glm::vec3 _position, glm::vec3 _scale, float _
 						Attrib.texcoords[2 * TinyObjVertex.texcoord_index + 1]
 					);
 				}
+				if (TinyObjVertex.normal_index >= 0) // negative value no normal data
+				{
+					Vertex.normal = glm::vec3(
+						Attrib.normals[3 * TinyObjVertex.normal_index + 0],
+						Attrib.normals[3 * TinyObjVertex.normal_index + 1],
+						Attrib.normals[3 * TinyObjVertex.normal_index + 2]
+					);
+				}
 				
 				Vertices.push_back(Vertex);
 			}
@@ -287,24 +295,30 @@ Mesh::Mesh(std::string _filePath, glm::vec3 _position, glm::vec3 _scale, float _
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, texcoord));
 	glEnableVertexAttribArray(2);
-
-	// Generate the instance VBO
-	glGenBuffers(1, &VBO_Instanced);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_Instanced);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * Count_Instanced, modelMatInstances.data(), GL_STATIC_DRAW);
-	// Set the vertex attribute pointers for the matrix (4 vec4)
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(1 * sizeof(glm::vec4)));
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, normal));
 	glEnableVertexAttribArray(3);
-	glEnableVertexAttribArray(4);
-	glEnableVertexAttribArray(5);
-	glEnableVertexAttribArray(6);
-	glVertexAttribDivisor(3, 1);
-	glVertexAttribDivisor(4, 1);
-	glVertexAttribDivisor(5, 1);
-	glVertexAttribDivisor(6, 1);
+
+	// If more than 1 instance, set up instanced rendering
+	if (_count > 1)
+	{
+		// Generate the instance VBO
+		glGenBuffers(1, &VBO_Instanced);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_Instanced);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * Count_Instanced, modelMatInstances.data(), GL_STATIC_DRAW);
+		// Set the vertex attribute pointers for the matrix (4 vec4)
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(1 * sizeof(glm::vec4)));
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+		glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+		glEnableVertexAttribArray(4);
+		glEnableVertexAttribArray(5);
+		glEnableVertexAttribArray(6);
+		glEnableVertexAttribArray(7);
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+		glVertexAttribDivisor(6, 1);
+		glVertexAttribDivisor(7, 1);
+	}
 }
 
 Mesh::~Mesh()
@@ -369,6 +383,7 @@ void Mesh::Render()
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniform3fv(glGetUniformLocation(programToUse, "CameraPos"), 1, glm::value_ptr(cameraPosition));
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
@@ -419,7 +434,7 @@ void Mesh::Render()
 	glUseProgram(0);
 }
 
-void Mesh::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat)
+void Mesh::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat, Camera* _camera)
 {
 	// Calculate the Model Matrix
 	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
@@ -431,6 +446,7 @@ void Mesh::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionM
 	// Update caamera variables
 	viewMatrix = _viewMat;
 	projectionMatrix = _projectionMat;
+	cameraPosition = _camera->GetCameraPosition();
 
 	// Update time variable
 	currentTime = _currentTime;

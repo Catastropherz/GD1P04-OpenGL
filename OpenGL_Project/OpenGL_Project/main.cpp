@@ -30,6 +30,9 @@ glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
 float RotationAngle = 0.0f; // Degrees
 
+// Camera parameters
+bool enableOrbiting = true;
+
 // Window size
 int WindowWidth = 800;
 int WindowHeight = 800;
@@ -92,11 +95,11 @@ int main()
 	// Create mesh objects
 	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
 	meshBarrel.setModel(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(20.0f, 20.0f, 20.0f), RotationAngle);
-	meshBarrel.setProgram(&program.Program_Texture);
+	meshBarrel.setProgram(&program.Program_TexLight);
 	meshBarrel.setTexture(&texture0);
 
 	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj", glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), RotationAngle, 100);
-	meshTree.setProgram(&program.Program_TextureInstanced);
+	meshTree.setProgram(&program.Program_TexLightInstanced);
 	meshTree.setTexture(&texture0);
 
 
@@ -204,11 +207,14 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 	// Update object components
 	for (int i = 0; i < _meshCount; ++i)
 	{
-		_meshArray[i]->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix());
+		_meshArray[i]->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
 	}
 
-	// Update the camera
-	_camera->Update(*_currentTime);
+	if (enableOrbiting)
+	{
+		// Update the camera
+		_camera->Update(*_currentTime);
+	}
 
 }
 
@@ -256,11 +262,15 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	}
 	if (_key == GLFW_KEY_R && (_action == GLFW_REPEAT || _action == GLFW_PRESS))
 	{
-		RotationAngle += 10.0f; // Rotate the object by 10 degrees when R is pressed
+		RotationAngle += 10.0f; // Rotate clockwise when R is pressed
 	}
 	if (_key == GLFW_KEY_T && _action == GLFW_PRESS)
 	{
 		Position = glm::vec3(0.0f, 0.0f, 0.0f); // Reset position when T is pressed
+	}
+	if (_key == GLFW_KEY_SPACE && _action == GLFW_PRESS) // Press Space to toggle camera orbiting
+	{
+		enableOrbiting = !enableOrbiting;
 	}
 }
 
