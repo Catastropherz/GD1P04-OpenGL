@@ -14,6 +14,7 @@
 #pragma once
 #include "TextureLoader.h"
 #include "Camera.h"
+#include <vector>
 
 enum MeshType
 {
@@ -66,6 +67,7 @@ private:
 
 	GLuint DrawCount = 0;
 	int DrawType = 0;
+	int Count_Instanced = 1;
 
 	MeshType type;
 
@@ -80,6 +82,9 @@ private:
 	glm::mat4 RotationMat = glm::mat4(0.0f);
 	glm::mat4 ScaleMat = glm::mat4(0.0f);
 	glm::mat4 ModelMat = glm::mat4(0.0f);
+
+	// Model matrix vector for instanced rendering
+	std::vector<glm::mat4> modelMatInstances;
 
 
 	// Uniform variables
@@ -125,5 +130,7 @@ public:
 	// Update uniform variables
 	void Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat);
 
+	// Generate model matrix instances for instanced rendering
+	void GenerateModelMatInstances(int _count);
 };
 

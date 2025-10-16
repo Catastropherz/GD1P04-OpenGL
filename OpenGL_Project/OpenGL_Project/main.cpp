@@ -90,14 +90,20 @@ int main()
 	InitialSetup(&camera, WindowWidth, WindowHeight);
 
 	// Create mesh objects
-	Mesh meshChest("Resources/Models/SM_Prop_Barrel_01.obj");
-	meshChest.setModel(glm::vec3(0.0f, -100.0f, 0.0f), glm::vec3(200.0f, 200.0f, 200.0f), RotationAngle);
-	meshChest.setProgram(&program.Program_Texture);
-	meshChest.setTexture(&texture0);
+	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
+	meshBarrel.setModel(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(20.0f, 20.0f, 20.0f), RotationAngle);
+	meshBarrel.setProgram(&program.Program_Texture);
+	meshBarrel.setTexture(&texture0);
+
+	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj");
+	meshTree.setModel(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), RotationAngle);
+	meshTree.GenerateModelMatInstances(32);
+	meshTree.setProgram(&program.Program_TextureInstanced);
+	meshTree.setTexture(&texture0);
 
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshChest };
+	Mesh* meshArray[] = { &meshTree };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 
 
@@ -137,6 +143,9 @@ void Render(Mesh* _meshArray[], int _meshCount)
 // Initial setup function to configure OpenGL settings and objects
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 {
+	// Seed random number generator
+	srand((unsigned int)time(NULL));
+
 	// Set the clear color
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
@@ -168,9 +177,9 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	//// Anchor top left --------
 	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 100.0f);
 	//// Anchor center --------
-	//_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 1000.0f);
+	//_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
 	//// Perspective projection
-	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 1000.0f);
+	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
 
 	// TEXTURE SETUP ---------------------------------
 	texture0.LoadTexture("Resources/Textures/Dungeons_Texture_01.png");

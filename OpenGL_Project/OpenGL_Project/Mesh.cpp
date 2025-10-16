@@ -282,7 +282,6 @@ Mesh::Mesh(std::string _filePath)
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, texcoord));
 	glEnableVertexAttribArray(1);
-
 }
 
 Mesh::~Mesh()
@@ -297,6 +296,16 @@ void Mesh::setModel(glm::vec3 _position, glm::vec3 _scale, float _angleDegrees)
 	Position = _position;
 	Scale = _scale;
 	RotationAngle = _angleDegrees;
+
+	// Calculate the Model Matrix
+	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
+	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
+
+	ModelMat = TranslationMat * RotationMat * ScaleMat;
+
+	// Push back default model matrix for instanced rendering
+	modelMatInstances.push_back(ModelMat);
 }
 
 void Mesh::setProgram(GLuint* _program)
@@ -337,6 +346,7 @@ void Mesh::Render()
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ModelMats[0]"), Count_Instanced, GL_FALSE, glm::value_ptr(modelMatInstances[0]));
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
@@ -354,29 +364,30 @@ void Mesh::Render()
 	{
 		case TRI:
 		{
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 3, Count_Instanced);
 			break;
 		}
 		case QUAD:
 		case QUAD_FLIP:
 		case QUAD_TILE:
 		{
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, Count_Instanced);
 			break;
 		}
 		case HEX:
 		{
-			glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+			glDrawElementsInstanced(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0, Count_Instanced);
 			break;
 		}
 		case CUBE:
 		{
-			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, Count_Instanced);
 			break;
 		}
 		case MODEL:
 		{
-			glDrawArrays(DrawType, 0, DrawCount);
+			glDrawArraysInstanced(DrawType, 0, DrawCount, Count_Instanced);
+			//glDrawArrays(DrawType, 0, DrawCount);
 			break;
 		}
 	}
@@ -415,5 +426,45 @@ void Mesh::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionM
 	{
 		std::cerr << "Error: Failed to load texture." << std::endl;
 	}
+
+}
+
+// Generate model matrix instances for instanced rendering
+// This function creates multiple instances of the model matrix with random translations
+// Reminder : Need to change count in the shader as well
+void Mesh::GenerateModelMatInstances(int _count)
+{
+	modelMatInstances.clear();
+	Count_Instanced = _count;
+	modelMatInstances.resize(Count_Instanced);
+
+	// Generate random transformations for each instance
+	for (int i = 0; i < Count_Instanced; i++)
+	{
+		glm::vec3 randPos = glm::vec3(
+			((rand() % 4000) / 100.0f) - 20.0f, // X: -20.0 to 20.0
+			0.0f, // Fixed Y position
+			((rand() % 4000) / 100.0f) - 20.0f  // Z: -20.0 to 20.0
+		);
+
+		glm::vec3 randRot = glm::vec3(
+			0.0f,
+			((rand() % 3600) / 10.0f), // Yaw: 0 to 360 degrees
+			0.0f
+		);
+
+		// Scale 0.8 to 1.2 the original size 
+		glm::vec3 randScale = glm::vec3(
+			((rand() % 400) / 1000.0f) + 0.8f,
+			((rand() % 400) / 1000.0f) + 0.8f,
+			((rand() % 400) / 1000.0f) + 0.8f
+		);
+
+		glm::mat4 transMat = glm::translate(TranslationMat, randPos); // Translate based on original translation matrix
+		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), glm::radians(randRot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 scalMat = glm::scale(ScaleMat, randScale); // Scale based on original scale matrix
+		modelMatInstances[i] = transMat * rotMat * scalMat;
+	}
+	modelMatInstances[0] = ModelMat; // Ensure the first instance uses the original model matrix
 
 }

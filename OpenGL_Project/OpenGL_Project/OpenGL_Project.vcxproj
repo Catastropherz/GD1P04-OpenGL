@@ -151,6 +151,7 @@
     <None Include="Resources\Shaders\PositionOnly.vert" />
     <None Include="Resources\Shaders\Texture.frag" />
     <None Include="Resources\Shaders\Texture.vert" />
+    <None Include="Resources\Shaders\TextureInstanced.vert" />
     <None Include="Resources\Shaders\TextureMix.frag" />
     <None Include="Resources\Shaders\TextureSpriteSheet.vert" />
     <None Include="Resources\Shaders\VertexColor.frag" />
