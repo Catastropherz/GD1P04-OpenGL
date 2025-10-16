@@ -22,7 +22,27 @@ enum MeshType
 	QUAD_FLIP,
 	QUAD_TILE,
 	HEX,
-	CUBE
+	CUBE,
+	MODEL,
+};
+
+struct VertexStandard
+{
+public:
+	glm::vec3 position;
+	glm::vec2 texcoord;
+
+	VertexStandard()
+	{
+		position = glm::vec3(0.0f);
+		texcoord = glm::vec2(0.0f);
+	};
+
+	VertexStandard(glm::vec3 _position, glm::vec2 _texcoord)
+	{
+		position = _position;
+		texcoord = _texcoord;
+	};
 };
 
 class Mesh
@@ -43,6 +63,9 @@ private:
 	GLuint VBO = 0;
 	GLuint VAO = 0;
 	GLuint EBO = 0;
+
+	GLuint DrawCount = 0;
+	int DrawType = 0;
 
 	MeshType type;
 
@@ -78,6 +101,7 @@ private:
 public:
 
 	Mesh(MeshType _type);
+	Mesh(std::string _filePath); // For loading model
 	~Mesh();
 
 	// Set position, scale, rotation of the mesh

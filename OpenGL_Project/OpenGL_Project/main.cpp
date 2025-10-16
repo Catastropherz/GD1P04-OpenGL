@@ -30,7 +30,7 @@ glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
 float RotationAngle = 0.0f; // Degrees
 
-// Window
+// Window size
 int WindowWidth = 800;
 int WindowHeight = 800;
 
@@ -42,7 +42,7 @@ bool IsMousePositionActive = false;
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
 glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 
-//GLuint texturePotion;
+//Textures
 TextureLoader texture0;
 TextureLoader texture1;
 TextureLoader texture2;
@@ -90,35 +90,14 @@ int main()
 	InitialSetup(&camera, WindowWidth, WindowHeight);
 
 	// Create mesh objects
-	Mesh meshTile(QUAD_TILE);
-	meshTile.setModel(glm::vec3(-170.0f, 200.0f, 0.0f), glm::vec3(250.0f, 250.0f, 1.0f), RotationAngle);
-	meshTile.setProgram(&program.Program_Texture);
-	meshTile.setTexture(&texture0);
-
-	Mesh meshMixed(QUAD);
-	meshMixed.setModel(glm::vec3(200.0f, 200.0f, 0.0f), glm::vec3(200.0f, 200.0f, 1.0f), RotationAngle);
-	meshMixed.setProgram(&program.Program_TextureMix);
-	meshMixed.setTexture(&texture0);
-	meshMixed.setSecondTexture(&texture1);
-
-	Mesh meshQuad(QUAD);
-	meshQuad.setModel(glm::vec3(-220.0, -200.0, 0.0f), glm::vec3(160.0f, 160.0f, 1.0f), RotationAngle);
-	meshQuad.setProgram(&program.Program_Texture);
-	meshQuad.setTexture(&texture1);
-
-	Mesh meshFlip(QUAD_FLIP);
-	meshFlip.setModel(glm::vec3(-80.0f, -200.0f, 0.0f), glm::vec3(160.0f, 160.0f, 1.0f), RotationAngle);
-	meshFlip.setProgram(&program.Program_Texture);
-	meshFlip.setTexture(&texture1);
-
-	Mesh meshAnim(QUAD);
-	meshAnim.setModel(glm::vec3(180.0f, -180.0f, 0.0f), glm::vec3(240.0f, 240.0f, 1.0f), RotationAngle);
-	meshAnim.setProgram(&program.Program_SpriteSheet);
-	meshAnim.setTexture(&texture2);
+	Mesh meshChest("Resources/Models/SM_Prop_Barrel_01.obj");
+	meshChest.setModel(glm::vec3(0.0f, -100.0f, 0.0f), glm::vec3(200.0f, 200.0f, 200.0f), RotationAngle);
+	meshChest.setProgram(&program.Program_Texture);
+	meshChest.setTexture(&texture0);
 
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshTile, &meshMixed, &meshQuad, &meshFlip, &meshAnim };
+	Mesh* meshArray[] = { &meshChest };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 
 
@@ -186,19 +165,15 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Uncomment to see wireframe mode
 
 	// Calculate the projection matrix 
-	// Anchor top left --------
+	//// Anchor top left --------
 	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 100.0f);
-	// Anchor center --------
-	_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
-	// Perspective projection
-	//_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
+	//// Anchor center --------
+	//_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 1000.0f);
+	//// Perspective projection
+	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 1000.0f);
 
 	// TEXTURE SETUP ---------------------------------
-	texture0.LoadTexture("Resources/Textures/PepeSad.png");
-	texture1.LoadTexture("Resources/Textures/PepeCry.png");
-	texture2.LoadTexture("Resources/Textures/RobotSpriteSheet2D.png");
-	texture2.SetSpriteSheetParameters(8, 2);
-	texture3.LoadTexture("Resources/Textures/ColorPickerOld.png");
+	texture0.LoadTexture("Resources/Textures/Dungeons_Texture_01.png");
 
 	// Enable blending
 	glEnable(GL_BLEND);

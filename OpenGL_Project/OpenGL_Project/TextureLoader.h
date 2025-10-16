@@ -28,6 +28,7 @@ private:
 
 public:
 	TextureLoader();
+	TextureLoader(const char* _filename, bool _flipY = true);
 	~TextureLoader();
 
 	// Load texture from file

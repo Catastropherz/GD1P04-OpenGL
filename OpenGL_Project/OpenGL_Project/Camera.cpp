@@ -14,8 +14,8 @@ Camera::Camera(GLFWwindow* _window)
 	viewMatrix = glm::lookAt(position, position + lookDirection, upDirection);
 	//center = TargetPos
 	//viewMatrix = glm::lookAt(position, target, upDirection);
-	//projectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 800.0f, 0.1f, 100.0f);
-	projectionMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, 0.1f, 100.0f);
+	projectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 800.0f, 0.1f, 1000.0f);
+	//projectionMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, 0.1f, 1000.0f);
 }
 
 Camera::~Camera()
@@ -29,12 +29,18 @@ void Camera::Update(float _currentTime)
 	if (deltaTime > frameTime) // Adjust the frame rate as needed
 	{
 		// Update the camera position
-		float amplitude = 80.0f; // Amplitude of the oscillation
+		float amplitude = 500.0f; // Amplitude of the oscillation
 		float speed = 1.5f;  // Radians per second
 
-		// Oscillate the camera left and right using a sine wave
+		// Orbital movement around the origin
 		position.x = amplitude * sin(speed * _currentTime);
+		position.z = amplitude * cos(speed * _currentTime);
+		position.y = 0.0f; // Fixed height
 
+		// Update the look direction to always face the origin
+		lookDirection = glm::normalize(-position); // Look towards the origin
+
+		// Update the previous time
 		previousTime = _currentTime;
 	}
 	//viewMatrix = glm::lookAt(position, target, upDirection);

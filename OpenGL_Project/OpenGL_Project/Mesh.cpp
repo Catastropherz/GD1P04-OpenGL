@@ -1,3 +1,8 @@
+// Library Defines
+#define TINYOBJLOADER_IMPLEMENTATION
+
+// Library Includes
+#include <tiny_obj_loader.h>
 #include "Mesh.h"
 
 const GLfloat Mesh::Vertices_Tri[18] = {
@@ -201,6 +206,85 @@ Mesh::Mesh(MeshType _type)
 	}
 }
 
+// For loading model from file
+Mesh::Mesh(std::string _filePath)
+{
+	type = MODEL;
+
+	std::vector<VertexStandard> Vertices;
+	tinyobj::ObjReaderConfig ReaderConfig;
+	tinyobj::ObjReader Reader;
+
+	// Load model using tinyobjloader
+	if (!Reader.ParseFromFile(_filePath, ReaderConfig))
+	{
+		if (!Reader.Error().empty())
+		{
+			std::cerr << "TinyObjReader: " << Reader.Error();
+		}
+		exit(1);
+	}
+
+	if (!Reader.Warning().empty())
+	{
+		std::cout << "TinyObjReader: " << Reader.Warning();
+	}
+
+	auto& Attrib = Reader.GetAttrib();
+	auto& Shapes = Reader.GetShapes();
+
+	// Loop through the shapes of the object
+	for (size_t ShapeIndex = 0; ShapeIndex < Shapes.size(); ShapeIndex++)
+	{
+		// Loop through the faces(polygon)
+		size_t ReadIndexOffset = 0;
+		for (size_t FaceIndex = 0; FaceIndex < Shapes[ShapeIndex].mesh.num_face_vertices.size(); FaceIndex++)
+		{
+			size_t FaceVertexCount = Shapes[ShapeIndex].mesh.num_face_vertices[FaceIndex];
+			// Loop through the vertices of the face
+			for (size_t VertexIndex = 0; VertexIndex < FaceVertexCount; VertexIndex++)
+			{
+				VertexStandard Vertex{};
+				tinyobj::index_t TinyObjVertex = Shapes[ShapeIndex].mesh.indices[ReadIndexOffset + VertexIndex];
+				Vertex.position = glm::vec3(
+					Attrib.vertices[3 * TinyObjVertex.vertex_index + 0],
+					Attrib.vertices[3 * TinyObjVertex.vertex_index + 1],
+					Attrib.vertices[3 * TinyObjVertex.vertex_index + 2]
+				);
+				if (TinyObjVertex.texcoord_index >= 0) // Check if texcoord index is valid
+				{
+					Vertex.texcoord = glm::vec2(
+						Attrib.texcoords[2 * TinyObjVertex.texcoord_index + 0],
+						Attrib.texcoords[2 * TinyObjVertex.texcoord_index + 1]
+					);
+				}
+				
+				Vertices.push_back(Vertex);
+			}
+			ReadIndexOffset += FaceVertexCount;
+		}
+	}
+
+	// Store for use iin Rendering
+	DrawType = GL_TRIANGLES;
+	DrawCount = (GLuint)Vertices.size();
+
+	// Create the Vertex Array and associated buffers
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(VertexStandard), Vertices.data(), GL_STATIC_DRAW);
+	
+	// Create the VertexAttributePointers for both Position and TexCoord
+	// Keep in mind the new VertexStandard
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, position));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, texcoord));
+	glEnableVertexAttribArray(1);
+
+}
+
 Mesh::~Mesh()
 {
 	glDeleteVertexArrays(1, &VAO);
@@ -288,6 +372,11 @@ void Mesh::Render()
 		case CUBE:
 		{
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			break;
+		}
+		case MODEL:
+		{
+			glDrawArrays(DrawType, 0, DrawCount);
 			break;
 		}
 	}

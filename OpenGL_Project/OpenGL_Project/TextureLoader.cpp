@@ -6,6 +6,11 @@ TextureLoader::TextureLoader()
 {
 }
 
+TextureLoader::TextureLoader(const char* _filename, bool _flipY)
+{
+	LoadTexture(_filename, _flipY);
+}
+
 TextureLoader::~TextureLoader()
 {
 }
