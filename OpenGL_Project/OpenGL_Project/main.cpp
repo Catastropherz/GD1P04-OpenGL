@@ -95,15 +95,13 @@ int main()
 	meshBarrel.setProgram(&program.Program_Texture);
 	meshBarrel.setTexture(&texture0);
 
-	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj");
-	meshTree.setModel(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), RotationAngle);
-	meshTree.GenerateModelMatInstances(32);
+	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj", glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), RotationAngle, 100);
 	meshTree.setProgram(&program.Program_TextureInstanced);
 	meshTree.setTexture(&texture0);
 
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshTree };
+	Mesh* meshArray[] = { &meshBarrel, &meshTree };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 
 

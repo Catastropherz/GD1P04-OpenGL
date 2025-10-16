@@ -64,6 +64,7 @@ private:
 	GLuint VBO = 0;
 	GLuint VAO = 0;
 	GLuint EBO = 0;
+	GLuint VBO_Instanced = 0;
 
 	GLuint DrawCount = 0;
 	int DrawType = 0;
@@ -106,7 +107,7 @@ private:
 public:
 
 	Mesh(MeshType _type);
-	Mesh(std::string _filePath); // For loading model
+	Mesh(std::string _filePath, glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 _scale = glm::vec3(1.0f, 1.0f, 1.0f), float _angleDegrees = 0.0f, int _count = 1); // For loading model
 	~Mesh();
 
 	// Set position, scale, rotation of the mesh

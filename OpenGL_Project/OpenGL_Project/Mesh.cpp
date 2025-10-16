@@ -207,9 +207,11 @@ Mesh::Mesh(MeshType _type)
 }
 
 // For loading model from file
-Mesh::Mesh(std::string _filePath)
+Mesh::Mesh(std::string _filePath, glm::vec3 _position, glm::vec3 _scale, float _angleDegrees, int _count)
 {
 	type = MODEL;
+
+	setModel(_position, _scale, _angleDegrees);
 
 	std::vector<VertexStandard> Vertices;
 	tinyobj::ObjReaderConfig ReaderConfig;
@@ -265,6 +267,9 @@ Mesh::Mesh(std::string _filePath)
 		}
 	}
 
+	// Generate instanced matrix
+	if (_count > 1) GenerateModelMatInstances(_count); // Default to 1 instance
+
 	// Store for use iin Rendering
 	DrawType = GL_TRIANGLES;
 	DrawCount = (GLuint)Vertices.size();
@@ -280,8 +285,26 @@ Mesh::Mesh(std::string _filePath)
 	// Keep in mind the new VertexStandard
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, position));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, texcoord));
-	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, texcoord));
+	glEnableVertexAttribArray(2);
+
+	// Generate the instance VBO
+	glGenBuffers(1, &VBO_Instanced);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_Instanced);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * Count_Instanced, modelMatInstances.data(), GL_STATIC_DRAW);
+	// Set the vertex attribute pointers for the matrix (4 vec4)
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(1 * sizeof(glm::vec4)));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(4);
+	glEnableVertexAttribArray(5);
+	glEnableVertexAttribArray(6);
+	glVertexAttribDivisor(3, 1);
+	glVertexAttribDivisor(4, 1);
+	glVertexAttribDivisor(5, 1);
+	glVertexAttribDivisor(6, 1);
 }
 
 Mesh::~Mesh()
@@ -346,7 +369,6 @@ void Mesh::Render()
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ModelMats[0]"), Count_Instanced, GL_FALSE, glm::value_ptr(modelMatInstances[0]));
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
