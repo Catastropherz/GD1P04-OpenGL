@@ -11,7 +11,12 @@
  Mail : sivakorn.tuangwilai@mds.ac.nz
  **************************************************************************/
 
-#include "SkyBox.h"
+/*************
+TODO:
+Reflection map
+**************/
+
+#include "Mesh.h"
 
 
 GLFWwindow* Window = nullptr;
@@ -19,7 +24,7 @@ GLFWwindow* Window = nullptr;
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
 void Render(SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount);
 void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _meshArray[], int _meshCount);
-void ProcessInput(float _deltaTime);
+void ProcessInput(float _deltaTime, Camera* _camera, Mesh* _meshToMove);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
 void TextInput(GLFWwindow* _window, unsigned int _codePoint);
 void MouseButtonInput(GLFWwindow* _window, int _button, int _action, int _mods);
@@ -47,9 +52,11 @@ glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 
 //Textures
 TextureLoader texture0;
-TextureLoader texture1;
-TextureLoader texture2;
-TextureLoader texture3;
+TextureLoader texture0Map;
+//TextureLoader texture1;
+//TextureLoader texture2;
+//TextureLoader texture3;
+
 //--------------------------------------------------
 
 int main()
@@ -101,8 +108,9 @@ int main()
 		"Resources/Textures/Skybox/left.png",
 		"Resources/Textures/Skybox/top.png",
 		"Resources/Textures/Skybox/bot.png",
-		"Resources/Textures/Skybox/back.png",
-		"Resources/Textures/Skybox/front.png"
+		"Resources/Textures/Skybox/front.png",
+		"Resources/Textures/Skybox/back.png"
+
 	};
 	SkyBox skybox(&camera, skyboxFaces);
 
@@ -113,13 +121,20 @@ int main()
 	meshBarrel.setProgram(&program.Program_TexLight);
 	meshBarrel.setTexture(&texture0);
 
-	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj", glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), RotationAngle, 100);
+	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj", 
+		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(0.8f, 0.8f, 0.8f), RotationAngle, 100);
 	meshTree.setProgram(&program.Program_TexLightInstanced);
 	meshTree.setTexture(&texture0);
 
+	Mesh meshBanner("Resources/Models/SM_Wep_Banner_05.obj");
+	meshBanner.setModel(glm::vec3(0.0f, -7.0f, 0.0f), glm::vec3(15.0f, 15.0f, 15.0f), RotationAngle);
+	meshBanner.setProgram(&program.Program_TexReflect);
+	meshBanner.SetSkybox(&skybox, &texture0Map);
+	meshBanner.setTexture(&texture0);
+
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshBarrel, &meshTree };
+	Mesh* meshArray[] = { &meshBanner, &meshTree };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 
 
@@ -172,6 +187,10 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, _windowWidth, _windowHeight);
 
+	// Enable MSAA
+	glfwWindowHint(GLFW_SAMPLES, 4); // 4 samples per fragment
+	glEnable(GL_MULTISAMPLE);
+
 	// Set the key input callback function
 	glfwSetKeyCallback(Window, KeyInput);
 	glfwSetMouseButtonCallback(Window, MouseButtonInput);
@@ -199,11 +218,12 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	//// Anchor center --------
 	//_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
 	//// Perspective projection
-	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 100.0f);
+	_camera->SetProjectionMatrix_Perspective(_windowWidth, _windowHeight, 45.0f, 0.1f, 1000.0f);
 
 	// TEXTURE SETUP ---------------------------------
 	texture0.LoadTexture("Resources/Textures/Dungeons_Texture_01.png");
-
+	texture0Map.LoadTexture("Resources/Textures/ReflectionMap_Banner.png");
+		
 	// Enable blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -221,7 +241,7 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 	*_previousTime = *_currentTime;
 
 	// Process input
-	ProcessInput(*_deltaTime);
+	ProcessInput(*_deltaTime, _camera, _meshArray[0]);
 
 	// Update object components
 	for (int i = 0; i < _meshCount; ++i)
@@ -229,32 +249,47 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 		_meshArray[i]->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
 	}
 
-	if (enableOrbiting)
-	{
-		// Update the camera
-		_camera->Update(*_currentTime);
-	}
+
+	// Update the camera
+	_camera->Update(*_currentTime, enableOrbiting);
+
 
 }
 
 //Query GLFW key states
-void ProcessInput(float _deltaTime)
+void ProcessInput(float _deltaTime, Camera* _camera , Mesh* _meshToMove)
 {
-	if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
+	float speed = 20.0f;
+
+	if (glfwGetKey(Window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		Position += glm::vec3(0.0f, 1.0f, 0.0f) * _deltaTime; // Move up
+		glm::vec3 direction = glm::vec3(0.0f, 1.0f, 0.0f); // Move up
+		_meshToMove->Move(direction * speed * _deltaTime); 
 	}
-	if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
+	if (glfwGetKey(Window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		Position -= glm::vec3(0.0f, 1.0f, 0.0f) * _deltaTime; // Move down
+		glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f); // Move down
+		_meshToMove->Move(direction * speed * _deltaTime);
 	}
 	if (glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		Position -= glm::vec3(1.0f, 0.0f, 0.0f) * _deltaTime; // Move left
+		glm::vec3 direction = _camera->GetCameraRightDirection() * -1.0f; // Move left
+		_meshToMove->Move(direction * speed * _deltaTime);
 	}
 	if (glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		Position += glm::vec3(1.0f, 0.0f, 0.0f) * _deltaTime; // Move right
+		glm::vec3 direction = _camera->GetCameraRightDirection(); // Move right
+		_meshToMove->Move(direction * speed * _deltaTime); 
+	}
+	if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		glm::vec3 direction = _camera->GetCameraForwardDirection(); // Move forward
+		_meshToMove->Move(direction * speed * _deltaTime); 
+	}
+	if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		glm::vec3 direction = _camera->GetCameraForwardDirection() * -1.0f; // Move backward
+		_meshToMove->Move(direction * speed * _deltaTime); 
 	}
 }
 
@@ -287,7 +322,7 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	{
 		Position = glm::vec3(0.0f, 0.0f, 0.0f); // Reset position when T is pressed
 	}
-	if (_key == GLFW_KEY_SPACE && _action == GLFW_PRESS) // Press Space to toggle camera orbiting
+	if (_key == GLFW_KEY_TAB && _action == GLFW_PRESS) // Press Space to toggle camera orbiting
 	{
 		enableOrbiting = !enableOrbiting;
 	}

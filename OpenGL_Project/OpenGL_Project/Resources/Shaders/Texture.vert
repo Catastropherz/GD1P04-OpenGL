@@ -17,6 +17,7 @@ out vec2 FragTexCoords;
 out vec3 FragNormal;
 out vec3 FragPos;
 
+
 //Shader Functionality
 void main()
 {

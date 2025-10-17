@@ -28,6 +28,8 @@ public:
 	GLuint Program_TextureInstanced = 0;
 	GLuint Program_TexLight = 0;
 	GLuint Program_TexLightInstanced = 0;
+	GLuint Program_TexReflect = 0;
+	GLuint Program_TexReflectInstanced = 0;
 
     Program();
     ~Program();

@@ -395,6 +395,17 @@ void Mesh::Render()
 		glBindTexture(GL_TEXTURE_2D, secondTexture->GetTextureID());
 		glUniform1i(glGetUniformLocation(programToUse, "Texture1"), 1);
 	}
+	// If reflective, bind the skybox texture
+	if (isReflective)
+	{
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
+		glUniform1i(glGetUniformLocation(programToUse, "Texture_Skybox"), 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, reflectMapTexture);
+		glUniform1i(glGetUniformLocation(programToUse, "Texture0ReflectMap"), 2);
+	}
 
 	// Render based on mesh type
 	switch (type)
@@ -436,14 +447,7 @@ void Mesh::Render()
 
 void Mesh::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat, Camera* _camera)
 {
-	// Calculate the Model Matrix
-	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
-	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
-
-	ModelMat = TranslationMat * RotationMat * ScaleMat;
-
-	// Update caamera variables
+	// Update camera variables
 	viewMatrix = _viewMat;
 	projectionMatrix = _projectionMat;
 	cameraPosition = _camera->GetCameraPosition();
@@ -505,4 +509,27 @@ void Mesh::GenerateModelMatInstances(int _count)
 	}
 	modelMatInstances[0] = ModelMat; // Ensure the first instance uses the original model matrix
 
+}
+
+void Mesh::Move(glm::vec3 _position)
+{
+	Position += _position;
+
+	// Calculate the Model Matrix
+	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
+	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
+
+	ModelMat = TranslationMat * RotationMat * ScaleMat;
+}
+
+void Mesh::SetSkybox(SkyBox* _skybox, TextureLoader* _reflectMap)
+{
+	skyboxTextureID = _skybox->GetTextureID();
+	isReflective = true;
+
+	if (_reflectMap != nullptr)
+	{
+		reflectMapTexture = _reflectMap->GetTextureID();
+	}
 }

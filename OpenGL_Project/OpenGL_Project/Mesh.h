@@ -12,8 +12,7 @@
  **************************************************************************/
 
 #pragma once
-#include "TextureLoader.h"
-#include "Camera.h"
+#include "SkyBox.h"
 #include <vector>
 
 enum MeshType
@@ -107,6 +106,9 @@ private:
 	int spriteSheetRow = 0;
 	int spriteSheetColumn = 0;
 	TextureLoader* secondTexture = nullptr;
+	GLuint skyboxTextureID = 0;
+	GLuint reflectMapTexture = 0;
+	bool isReflective = false;
 
 	// Camera
 	glm::vec3 cameraPosition = glm::vec3(0.0f);
@@ -131,7 +133,10 @@ public:
 
 	// Set second texture for the mesh (for mixing)
 	void setSecondTexture(TextureLoader* _texture);
-
+	
+	// Set skybox texture ID
+	void SetSkybox(SkyBox* _skybox, TextureLoader* _reflectMap = nullptr);
+	
 	// Render the mesh
 	void Render();
 
@@ -140,5 +145,10 @@ public:
 
 	// Generate model matrix instances for instanced rendering
 	void GenerateModelMatInstances(int _count);
+
+	// Move
+	void Move(glm::vec3 _position);
+
+
 };
 

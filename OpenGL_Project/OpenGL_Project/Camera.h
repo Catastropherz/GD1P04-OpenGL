@@ -35,12 +35,14 @@ private:
 	float frameRate = 60.0f; // Frames per second
 
 	bool isOrbiting = true; // Orbiting movement around the origin
+	float orbitTime = 0.0f; // Storing orbit position
+
 public:
 	Camera(GLFWwindow* _window);
 	~Camera();
 
 	// Update the camera's position and orientation
-	void Update(float _currentTime);
+	void Update(float _currentTime, bool _isOrbit);
 
 	// Returns -1 for left, 0 for no movement, and 1 for right
 	int TriBool();
@@ -53,6 +55,12 @@ public:
 
 	// Getter function for the Camera Position
 	glm::vec3 GetCameraPosition() const;
+
+	// Getter function for the Camera Forward Position
+	glm::vec3 GetCameraForwardDirection() const;
+
+	// Getter function for camera right direction
+	glm::vec3 GetCameraRightDirection() const;
 
 	// Setter functions for the Projection Matrix (Perspective)
 	void SetProjectionMatrix_Perspective(int _width, int _height, float _fov = 45.0f, float _nearPlane = 0.1f, float _farPlane = 100.0f);

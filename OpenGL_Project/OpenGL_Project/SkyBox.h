@@ -1,5 +1,6 @@
 #pragma once
-#include "Mesh.h"
+#include "TextureLoader.h"
+#include "Camera.h"
 
 class SkyBox
 {
@@ -26,5 +27,8 @@ public:
 	SkyBox(Camera* _camera, std::string* _filePath);
 	~SkyBox();
 	void RenderSkybox();
+
+	GLuint GetTextureID() const { return textureSkybox; }
+
 };
 

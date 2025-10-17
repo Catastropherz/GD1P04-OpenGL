@@ -14,7 +14,7 @@ Camera::Camera(GLFWwindow* _window)
 	viewMatrix = glm::lookAt(position, position + lookDirection, upDirection);
 	//center = TargetPos
 	//viewMatrix = glm::lookAt(position, target, upDirection);
-	projectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 800.0f, 0.1f, 100.0f);
+	projectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 800.0f, 0.1f, 1000.0f);
 	//projectionMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, 0.1f, 100.0f);
 }
 
@@ -22,26 +22,33 @@ Camera::~Camera()
 {
 }
 
-void Camera::Update(float _currentTime)
+void Camera::Update(float _currentTime, bool _isOrbit)
 {
 	float deltaTime = _currentTime - previousTime;
 	float frameTime = 1.0f / frameRate; // Calculate the time per frame based on the frame rate
 	if (deltaTime > frameTime) // Adjust the frame rate as needed
 	{
-		// Orbital movement parameters
-		float amplitude = 50.0f; // Amplitude of the oscillation
-		float speed = 0.5f;  // Radians per second
-
-		// Orbital movement around the origin
-		position.x = amplitude * sin(speed * _currentTime);
-		position.z = amplitude * cos(speed * _currentTime);
-		position.y = 0.0f; // Fixed height
-
-		// Update the look direction to always face the origin
-		lookDirection = glm::normalize(-position); // Look towards the origin
-
 		// Update the previous time
 		previousTime = _currentTime;
+
+		if (_isOrbit)
+		{
+			orbitTime += deltaTime;
+
+			// Orbital movement parameters
+			float amplitude = 50.0f; // Amplitude of the oscillation
+			float speed = 0.5f;  // Radians per second
+
+			// Orbital movement around the origin
+			position.x = amplitude * sin(speed * orbitTime);
+			position.z = amplitude * cos(speed * orbitTime);
+			position.y = 0.0f; // Fixed height
+
+			// Update the look direction to always face the origin
+			lookDirection = glm::normalize(-position); // Look towards the origin
+		}
+
+		
 	}
 	//viewMatrix = glm::lookAt(position, target, upDirection);
 	viewMatrix = glm::lookAt(position, position + lookDirection, upDirection);
@@ -75,6 +82,16 @@ glm::mat4 Camera::GetProjectionMatrix() const
 glm::vec3 Camera::GetCameraPosition() const
 {
 	return position;
+}
+
+glm::vec3 Camera::GetCameraForwardDirection() const
+{
+	return glm::normalize(lookDirection);
+}
+
+glm::vec3 Camera::GetCameraRightDirection() const
+{
+	return glm::normalize(glm::cross(lookDirection, upDirection));
 }
 
 void Camera::SetProjectionMatrix_Perspective(int _width, int _height, float _fov, float _nearPlane, float _farPlane)
