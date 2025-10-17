@@ -35,6 +35,7 @@ const GLfloat SkyBox::Vertices_Cube[72] = {
 	/* 23 */	1.0f, -1.0f, 1.0f,		
 };
 
+// Reverse wind order to avoid getting cull
 const GLuint SkyBox::Indices_Cube[36] = {
 		8,	10,	9, // Right Face
 		8,	11, 10,

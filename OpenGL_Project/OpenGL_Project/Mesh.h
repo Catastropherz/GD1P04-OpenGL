@@ -142,7 +142,7 @@ public:
 	// Set skybox texture ID
 	void SetSkybox(SkyBox* _skybox, TextureLoader* _reflectMap = nullptr);
 
-	// Set ortho
+	// Set ortho perspective matrix for rendering UI elements
 	void SetOrtho(float _windowWidth, float _windowHeight);
 	
 	// Render the mesh

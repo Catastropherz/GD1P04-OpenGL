@@ -11,13 +11,7 @@
  Mail : sivakorn.tuangwilai@mds.ac.nz
  **************************************************************************/
 
-/*************
-TODO:
-Reflection map
-**************/
-
 #include "Mesh.h"
-
 
 GLFWwindow* Window = nullptr;
 
@@ -54,10 +48,6 @@ bool isMouseOverButton = false;
 // For defining which mesh is a button and which mesh should switch texture
 Mesh* button = nullptr;
 Mesh* targetMeshForSwitchingTexture = nullptr;
-
-// Colors
-glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
-glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 
 //Textures
 TextureLoader texture0;
@@ -125,11 +115,6 @@ int main()
 
 
 	// Create mesh objects
-	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
-	meshBarrel.setModel(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(20.0f, 20.0f, 20.0f), RotationAngle);
-	meshBarrel.setProgram(&program.Program_TexLight);
-	meshBarrel.setTexture(&texture0);
-
 	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj", 
 		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(0.8f, 0.8f, 0.8f), RotationAngle, 100);
 	meshTree.setProgram(&program.Program_TexLightInstanced);
@@ -321,7 +306,6 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 			_UIArray[i]->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
 		}
 	}
-
 
 	// Update the camera
 	_camera->Update(*_currentTime, enableOrbiting);
