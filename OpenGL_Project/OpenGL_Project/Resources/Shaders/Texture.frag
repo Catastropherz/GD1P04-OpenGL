@@ -1,7 +1,6 @@
 #version 460 core
 
 //Input from vertex shader
-//in vec3 FragColor;
 in vec2 FragTexCoords;
 
 // Uniform Inputs

@@ -86,6 +86,7 @@ private:
 	glm::mat4 RotationMat = glm::mat4(0.0f);
 	glm::mat4 ScaleMat = glm::mat4(0.0f);
 	glm::mat4 ModelMat = glm::mat4(0.0f);
+	glm::mat4 OrthoMat = glm::mat4(0.0f);
 
 	// Model matrix vector for instanced rendering
 	std::vector<glm::mat4> modelMatInstances;
@@ -113,6 +114,10 @@ private:
 	// Camera
 	glm::vec3 cameraPosition = glm::vec3(0.0f);
 
+	// Window parameter
+	float windowWidth = 800.0f;
+	float windowHeight = 800.0f;
+
 public:
 
 	Mesh(MeshType _type);
@@ -136,6 +141,9 @@ public:
 	
 	// Set skybox texture ID
 	void SetSkybox(SkyBox* _skybox, TextureLoader* _reflectMap = nullptr);
+
+	// Set ortho
+	void SetOrtho(float _windowWidth, float _windowHeight);
 	
 	// Render the mesh
 	void Render();
@@ -148,6 +156,12 @@ public:
 
 	// Move
 	void Move(glm::vec3 _position);
+
+	// Toggle Switch Texture
+	void ToggleTexture();
+
+	// Check if cursor is inside
+	bool checkHover(double _xpos, double _ypos);
 
 
 };

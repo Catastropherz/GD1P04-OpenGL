@@ -22,8 +22,10 @@ Reflection map
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
-void Render(SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount);
-void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _meshArray[], int _meshCount);
+void Render(Camera* _camera, SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount,
+	Mesh* _UIArray[] = nullptr, int _UICount = 0);
+void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, 
+	Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[] = nullptr, int _UICount = 0);
 void ProcessInput(float _deltaTime, Camera* _camera, Mesh* _meshToMove);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
 void TextInput(GLFWwindow* _window, unsigned int _codePoint);
@@ -42,9 +44,16 @@ bool enableOrbiting = true;
 int WindowWidth = 800;
 int WindowHeight = 800;
 
-// Entry bool
-bool IsTextEntryActive = false;
-bool IsMousePositionActive = false;
+// Booleans
+bool isTextEntryActive = false;
+bool isMousePositionActive = false;
+bool enableMouse = true;
+bool enableWireframe = false;
+bool isMouseOverButton = false;
+
+// For defining which mesh is a button and which mesh should switch texture
+Mesh* button = nullptr;
+Mesh* targetMeshForSwitchingTexture = nullptr;
 
 // Colors
 glm::vec3 SolidColorRed = glm::vec3(1.0f, 0.0f, 0.0f); // Red
@@ -53,9 +62,9 @@ glm::vec3 SolidColorGreen = glm::vec3(0.0f, 1.0f, 0.0f); // Green
 //Textures
 TextureLoader texture0;
 TextureLoader texture0Map;
-//TextureLoader texture1;
-//TextureLoader texture2;
-//TextureLoader texture3;
+TextureLoader texture1;
+TextureLoader textureButtonRed;
+TextureLoader textureButtonGreen;
 
 //--------------------------------------------------
 
@@ -125,17 +134,29 @@ int main()
 		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(0.8f, 0.8f, 0.8f), RotationAngle, 100);
 	meshTree.setProgram(&program.Program_TexLightInstanced);
 	meshTree.setTexture(&texture0);
+	meshTree.setSecondTexture(&texture1);
 
 	Mesh meshBanner("Resources/Models/SM_Wep_Banner_05.obj");
 	meshBanner.setModel(glm::vec3(0.0f, -7.0f, 0.0f), glm::vec3(15.0f, 15.0f, 15.0f), RotationAngle);
 	meshBanner.setProgram(&program.Program_TexReflect);
 	meshBanner.SetSkybox(&skybox, &texture0Map);
 	meshBanner.setTexture(&texture0);
+	meshBanner.setSecondTexture(&texture1);
+	targetMeshForSwitchingTexture = &meshBanner;
 
+	Mesh meshButton(QUAD);
+	meshButton.setModel(glm::vec3(100.0f, 700.0f, 0.0f), glm::vec3(100.0f, 100.0f, 1.0f), 0.0f);
+	meshButton.setProgram(&program.Program_TextureUI);
+	meshButton.SetOrtho(WindowWidth, WindowHeight);
+	meshButton.setTexture(&textureButtonRed);
+	meshButton.setSecondTexture(&textureButtonGreen);
+	button = &meshButton;
 
 	// Create an array containing all the mesh objects
 	Mesh* meshArray[] = { &meshBanner, &meshTree };
+	Mesh* UIArray[] = { &meshButton };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
+	int UICount = sizeof(UIArray) / sizeof(UIArray[0]);
 
 
 
@@ -143,10 +164,10 @@ int main()
 	while (glfwWindowShouldClose(Window) == false)
 	{
 		// Update all objects and run the processes
-		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime, meshArray, meshCount);
+		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime, meshArray, meshCount, UIArray, UICount);
 
 		// Render all objects
-		Render(&skybox ,meshArray, meshCount);
+		Render(&camera, &skybox ,meshArray, meshCount, UIArray, UICount);
 	}
 	// End of Main Loop ****************************************
 
@@ -157,7 +178,7 @@ int main()
 }
 
 // Render function to render all objects
-void Render(SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount)
+void Render(Camera* _camera, SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
 {
 	// Clear buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -165,11 +186,28 @@ void Render(SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount)
 	// Render skybox first
 	_skybox->RenderSkybox();
 
-	for (int i = 0; i < _meshCount; ++i)
+	// Render mesh objects
+	if (_meshArray != nullptr)
 	{
-		_meshArray[i]->Render();
+		for (int i = 0; i < _meshCount; ++i)
+		{
+			_meshArray[i]->Render();
+		}
 	}
 
+	// Render UI --------
+	// Temporarily Disable Depth Testing
+    // UI elements should always be drawn on top, regardless of their Z position.
+	glDisable(GL_DEPTH_TEST);
+	 if (_UIArray != nullptr)
+	 {
+		 for (int i = 0; i < _UICount; ++i)
+		 {
+			 _UIArray[i]->Render();
+		 }
+	 }
+	 // Re-enable depth testing
+	 glEnable(GL_DEPTH_TEST);
 
 	// Swap the front and back buffers
 	glfwSwapBuffers(Window);
@@ -194,11 +232,7 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	// Set the key input callback function
 	glfwSetKeyCallback(Window, KeyInput);
 	glfwSetMouseButtonCallback(Window, MouseButtonInput);
-
-	// Cursor mode
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Normal cursor mode
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide and lock cursor mode
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Hide cursor mode
+	glfwSetCursorPosCallback(Window, CursorPositionInput);
 
 	// Enable Depth testing for 3D
 	glEnable(GL_DEPTH_TEST);
@@ -214,7 +248,7 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 
 	// Calculate the projection matrix 
 	//// Anchor top left --------
-	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 100.0f);
+	// _camera->SetProjectionMatrix_Orthographic(0, _windowWidth, _windowHeight, 0, 0.1f, 1000.0f);
 	//// Anchor center --------
 	//_camera->SetProjectionMatrix_Orthographic(-_windowWidth / 2, _windowWidth / 2, -_windowHeight / 2, _windowHeight / 2, 0.1f, 100.0f);
 	//// Perspective projection
@@ -223,6 +257,10 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	// TEXTURE SETUP ---------------------------------
 	texture0.LoadTexture("Resources/Textures/Dungeons_Texture_01.png");
 	texture0Map.LoadTexture("Resources/Textures/ReflectionMap_Banner.png");
+	texture1.LoadTexture("Resources/Textures/Dungeons_Texture_03.png");
+	textureButtonRed.LoadTexture("Resources/Textures/Red.png");
+	textureButtonGreen.LoadTexture("Resources/Textures/Green.png");
+
 		
 	// Enable blending
 	glEnable(GL_BLEND);
@@ -230,7 +268,8 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 }
 
 // Update function to update all objects
-void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh* _meshArray[], int _meshCount)
+void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime,
+	Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
 {
 	// Check for any events like key presses or mouse movements
 	glfwPollEvents();
@@ -243,10 +282,44 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 	// Process input
 	ProcessInput(*_deltaTime, _camera, _meshArray[0]);
 
-	// Update object components
-	for (int i = 0; i < _meshCount; ++i)
+	// Cursor mode
+	if (enableMouse)
 	{
-		_meshArray[i]->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Normal cursor mode
+	}
+	else
+	{
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide and lock cursor mode
+		//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Hide cursor mode
+	}
+
+	// Wireframe mode
+	if (!enableWireframe)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+	else
+	{
+		// Wireframe mode
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+
+	// Update object components
+	if (_meshArray != nullptr)
+	{
+		for (int i = 0; i < _meshCount; ++i)
+		{
+			_meshArray[i]->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
+		}
+	}
+
+	// Update UI
+	if (_UIArray != nullptr)
+	{
+		for (int i = 0; i < _UICount; ++i)
+		{
+			_UIArray[i]->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
+		}
 	}
 
 
@@ -298,8 +371,8 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 {
 	if (_key == GLFW_KEY_ENTER && _action == GLFW_PRESS)
 	{
-		IsTextEntryActive = !IsTextEntryActive; // Toggle text entry mode when Enter is pressed
-		if (IsTextEntryActive)
+		isTextEntryActive = !isTextEntryActive; // Toggle text entry mode when Enter is pressed
+		if (isTextEntryActive)
 		{
 			glfwSetCharCallback(_window, TextInput); // Set the text input callback
 			std::cout << "Text entry mode activated." << std::endl;
@@ -314,43 +387,39 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	{
 		glfwSetWindowShouldClose(_window, true); // Close the window when Escape is pressed
 	}
-	if (_key == GLFW_KEY_R && (_action == GLFW_REPEAT || _action == GLFW_PRESS))
-	{
-		RotationAngle += 10.0f; // Rotate clockwise when R is pressed
-	}
-	if (_key == GLFW_KEY_T && _action == GLFW_PRESS)
-	{
-		Position = glm::vec3(0.0f, 0.0f, 0.0f); // Reset position when T is pressed
-	}
 	if (_key == GLFW_KEY_TAB && _action == GLFW_PRESS) // Press Space to toggle camera orbiting
 	{
 		enableOrbiting = !enableOrbiting;
+	}
+	if (_key == GLFW_KEY_1 && _action == GLFW_PRESS) // Press 1 to toggle mouse cursor
+	{
+		enableMouse = !enableMouse;
+	}
+	if (_key == GLFW_KEY_2 && _action == GLFW_PRESS) // Press 2 to toggle wireframe mode
+	{
+		enableWireframe = !enableWireframe;
+	}
+	if (_key == GLFW_KEY_3 && _action == GLFW_PRESS) // Press 3 to Print the current screen coordinates of the mouse
+	{
+		isMousePositionActive = !isMousePositionActive; // Toggle mouse position display
+		if (isMousePositionActive)	std::cout << "Mouse position tracking activated." << std::endl;
+		else std::cout << "Mouse position tracking deactivated." << std::endl;
 	}
 }
 
 // Callback function called in response to mouse button input. Processed during glfwPollEvents()
 void MouseButtonInput(GLFWwindow* _window, int _button, int _action, int _mods)
 {
-	if (_button == GLFW_MOUSE_BUTTON_RIGHT && _action == GLFW_PRESS)
+	if (_button == GLFW_MOUSE_BUTTON_LEFT && _action == GLFW_PRESS)
 	{
-		std::cout << "Mouse Button Right: Press" << std::endl;
-	}
-	if (_button == GLFW_MOUSE_BUTTON_RIGHT && _action == GLFW_RELEASE)
-	{
-		std::cout << "Mouse Button Right: Release" << std::endl;
-	}
-	if (_button == GLFW_MOUSE_BUTTON_MIDDLE && _action == GLFW_PRESS)
-	{
-		IsMousePositionActive = !IsMousePositionActive; // Toggle mouse position display
-		if (IsMousePositionActive)
+		// Check if the mouse click occurred while hovering the UI Quad
+		if (isMouseOverButton && targetMeshForSwitchingTexture)
 		{
-			glfwSetCursorPosCallback(_window, CursorPositionInput); // Set the cursor position callback
-			std::cout << "Mouse position tracking activated." << std::endl;
-		}
-		else
-		{
-			glfwSetCursorPosCallback(_window, nullptr); // Remove the cursor position callback
-			std::cout << "Mouse position tracking deactivated." << std::endl;
+			std::cout << "Switching Banner Texture" << std::endl;
+
+			// Toggle the 3D object's texture
+			targetMeshForSwitchingTexture->ToggleTexture();
+
 		}
 	}
 }
@@ -364,5 +433,22 @@ void TextInput(GLFWwindow* _window, unsigned int _codePoint)
 // Callback function called in response to cursor position input. Processed during glfwPollEvents()
 void CursorPositionInput(GLFWwindow* _window, double _xpos, double _ypos)
 {
-	std::cout << "Cursor Position: (" << _xpos << ", " << _ypos << ")" << std::endl;
+	if (isMousePositionActive)
+	{
+		std::cout << "Cursor Position: (" << _xpos << ", " << _ypos << ")" << std::endl;
+	}
+
+	// Handle texture switch on hover
+	if (button->checkHover(_xpos, _ypos) && !isMouseOverButton)
+	{
+		// Enter hover state
+		isMouseOverButton = true;
+		button->ToggleTexture();
+	}
+	else if (!(button->checkHover(_xpos, _ypos)) && isMouseOverButton)
+	{
+		// Exit hover state
+		isMouseOverButton = false;
+		button->ToggleTexture();
+	}
 }

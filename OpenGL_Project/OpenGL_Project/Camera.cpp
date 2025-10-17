@@ -99,9 +99,14 @@ void Camera::SetProjectionMatrix_Perspective(int _width, int _height, float _fov
 	projectionMatrix = glm::perspective(glm::radians(_fov), static_cast<float>(_width) / static_cast<float>(_height), _nearPlane, _farPlane);
 }
 
-void Camera::SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top, float _nearPlane, float _farPlane)
+void Camera::SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top)
 {
-	projectionMatrix = glm::ortho(static_cast<float>(_left), static_cast<float>(_right), static_cast<float>(_bottom), static_cast<float>(_top), _nearPlane, _farPlane);
+	projectionMatrix = glm::ortho(static_cast<float>(_left), static_cast<float>(_right), static_cast<float>(_bottom), static_cast<float>(_top));
 }
+
+//void Camera::SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top, float _nearPlane, float _farPlane)
+//{
+//	projectionMatrix = glm::ortho(static_cast<float>(_left), static_cast<float>(_right), static_cast<float>(_bottom), static_cast<float>(_top), _nearPlane, _farPlane);
+//}
 
 

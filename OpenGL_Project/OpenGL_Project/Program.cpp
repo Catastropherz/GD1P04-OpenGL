@@ -30,6 +30,9 @@ Program::Program()
                                                         "Resources/Shaders/Lighting_Reflect.frag");
     Program_TexReflectInstanced = ShaderLoader::CreateProgram(  "Resources/Shaders/TextureInstanced.vert",
                                                                 "Resources/Shaders/Lighting_Reflect.frag");
+    Program_TextureUI = ShaderLoader::CreateProgram("Resources/Shaders/TextureUI.vert",
+                                                    "Resources/Shaders/Texture.frag");
+
 }
 
 Program::~Program()

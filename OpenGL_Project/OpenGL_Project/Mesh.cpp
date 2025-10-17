@@ -384,6 +384,11 @@ void Mesh::Render()
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(programToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniform3fv(glGetUniformLocation(programToUse, "CameraPos"), 1, glm::value_ptr(cameraPosition));
+	if (OrthoMat != glm::mat4(0.0f))
+	{
+		glUniformMatrix4fv(glGetUniformLocation(programToUse, "OrthoProjectionMat"), 1, GL_FALSE, glm::value_ptr(OrthoMat));
+
+	}
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
@@ -523,6 +528,26 @@ void Mesh::Move(glm::vec3 _position)
 	ModelMat = TranslationMat * RotationMat * ScaleMat;
 }
 
+void Mesh::ToggleTexture()
+{
+	TextureLoader* textureTemp = texture;
+	texture = secondTexture;
+	secondTexture = textureTemp;
+}
+
+bool Mesh::checkHover(double _xpos, double _ypos)
+{
+	float flipY = windowHeight - _ypos;
+
+	bool isInside =
+		_xpos >= Position.x - (Scale.x * 0.5f) &&
+		_xpos < Position.x + (Scale.x * 0.5f) &&
+		flipY >= Position.y - (Scale.y * 0.5f) &&
+		flipY < Position.y + (Scale.y * 0.5f);
+
+	return isInside;
+}
+
 void Mesh::SetSkybox(SkyBox* _skybox, TextureLoader* _reflectMap)
 {
 	skyboxTextureID = _skybox->GetTextureID();
@@ -532,4 +557,11 @@ void Mesh::SetSkybox(SkyBox* _skybox, TextureLoader* _reflectMap)
 	{
 		reflectMapTexture = _reflectMap->GetTextureID();
 	}
+}
+
+void Mesh::SetOrtho(float _windowWidth, float _windowHeight)
+{
+	OrthoMat = glm::ortho(0.0f, _windowWidth,  0.0f, _windowHeight);
+	windowWidth = _windowWidth;
+	windowHeight = _windowHeight;
 }

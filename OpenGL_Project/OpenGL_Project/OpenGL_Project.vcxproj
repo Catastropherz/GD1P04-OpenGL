@@ -159,6 +159,7 @@
     <None Include="Resources\Shaders\TextureInstanced.vert" />
     <None Include="Resources\Shaders\TextureMix.frag" />
     <None Include="Resources\Shaders\TextureSpriteSheet.vert" />
+    <None Include="Resources\Shaders\TextureUI.vert" />
     <None Include="Resources\Shaders\VertexColor.frag" />
     <None Include="Resources\Shaders\VertexColorFade.frag" />
     <None Include="Resources\Shaders\WorldSpace.vert" />
