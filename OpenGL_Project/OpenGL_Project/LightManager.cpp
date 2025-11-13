@@ -37,6 +37,16 @@ void LightManager::setAttenuationForPointLight(int _index, float _constant, floa
 	}
 }
 
+void LightManager::setSpotlight(glm::vec3 _position, glm::vec3 _direction, float _cutOff, float _outerCutOff, glm::vec3 _color, float _specularStrength)
+{
+	spotlight.position = _position;
+	spotlight.direction = _direction;
+	spotlight.cutOff = glm::cos(glm::radians(_cutOff));
+	spotlight.outerCutOff = glm::cos(glm::radians(_outerCutOff));
+	spotlight.color = _color;
+	spotlight.specularStrength = _specularStrength;
+}
+
 void LightManager::setDirectionalLight(glm::vec3 _direction, glm::vec3 _color, float _specularStrength)
 {
 	directionalLight.direction = _direction;
@@ -60,7 +70,17 @@ void LightManager::applyLightsToShader(GLuint _shaderProgram)
 		glUniform1f(glGetUniformLocation(_shaderProgram, (baseName + ".AttenuationExponent").c_str()), pointLightArray[i].attenuationExponent);
 	}
 
+	// Directional Light
 	glUniform3fv(glGetUniformLocation(_shaderProgram, "Directional.Direction"), 1, glm::value_ptr(directionalLight.direction));
 	glUniform3fv(glGetUniformLocation(_shaderProgram, "Directional.Color"), 1, glm::value_ptr(directionalLight.color));
 	glUniform1f(glGetUniformLocation(_shaderProgram, "Directional.SpecularStrength"), directionalLight.specularStrength);
+
+	// Spotlight
+	glUniform3fv(glGetUniformLocation(_shaderProgram, "Spotlight.Position"), 1, glm::value_ptr(spotlight.position));
+	glUniform3fv(glGetUniformLocation(_shaderProgram, "Spotlight.Direction"), 1, glm::value_ptr(spotlight.direction));
+	glUniform1f(glGetUniformLocation(_shaderProgram, "Spotlight.CutOff"), spotlight.cutOff);
+	glUniform1f(glGetUniformLocation(_shaderProgram, "Spotlight.OuterCutOff"), spotlight.outerCutOff);
+	glUniform3fv(glGetUniformLocation(_shaderProgram, "Spotlight.Color"), 1, glm::value_ptr(spotlight.color));
+	glUniform1f(glGetUniformLocation(_shaderProgram, "Spotlight.SpecularStrength"), spotlight.specularStrength);
+
 }

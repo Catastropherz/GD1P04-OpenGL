@@ -19,6 +19,16 @@ struct DirectionalLight
 	float specularStrength;
 };
 
+struct Spotlight 
+{
+	glm::vec3 position;
+	glm::vec3 direction;
+	float cutOff;      // cos(inner angle)
+	float outerCutOff; // cos(outer angle)
+	glm::vec3 color;
+	float specularStrength;
+};
+
 class LightManager
 {
 private:
@@ -28,6 +38,7 @@ private:
 	PointLight pointLightArray[MAX_POINT_LIGHTS];
 	unsigned int pointLightCount = 0;
 	DirectionalLight directionalLight;
+	Spotlight spotlight;
 
 public:
 	 LightManager();
@@ -42,6 +53,9 @@ public:
 	// Set attenuation for a specific point light (index, constant, linear, exponent)
 	void setAttenuationForPointLight(int _index, float _constant, float _linear, float _exponent);
 	
+	// Set spotlight properties
+	void setSpotlight(glm::vec3 _position, glm::vec3 _direction, float _cutOff, float _outerCutOff, glm::vec3 _color, float _specularStrength);
+
 	// Set directional light
 	void setDirectionalLight(glm::vec3 _direction, glm::vec3 _color, float _specularStrength);
 	

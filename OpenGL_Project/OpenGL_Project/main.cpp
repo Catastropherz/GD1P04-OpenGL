@@ -24,7 +24,7 @@ GLFWwindow* Window = nullptr;
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
 void Render(Camera* _camera, SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount,
 	Mesh* _UIArray[] = nullptr, int _UICount = 0);
-void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime, 
+void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, float* _previousTime, float* _deltaTime, 
 	Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[] = nullptr, int _UICount = 0);
 void ProcessInput(float _deltaTime, Camera* _camera, Mesh* _meshToMove);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
@@ -126,7 +126,7 @@ int main()
 
 	// Create Light Manager
 	LightManager lightManager;
-	lightManager.setAmbientLightStrength(0.05f, glm::vec3(1.0f, 1.0f, 1.0f));
+	lightManager.setAmbientLightStrength(0.02f, glm::vec3(0.8f, 0.8f, 0.8f));
 	lightManager.addPointLight(glm::vec3(25.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
 	lightManager.setAttenuationForPointLight(0, 1.0f, 0.04f, 0.0075f);
 	lightManager.addPointLight(glm::vec3(-25.0f, 10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
@@ -193,7 +193,7 @@ int main()
 	while (glfwWindowShouldClose(Window) == false)
 	{
 		// Update all objects and run the processes
-		Update(&camera, &CurrentTime, &PreviousTime, &DeltaTime, meshArray, meshCount, UIArray, UICount);
+		Update(&camera, &lightManager, &CurrentTime, &PreviousTime, &DeltaTime, meshArray, meshCount, UIArray, UICount);
 
 		// Render all objects
 		Render(&camera, &skybox ,meshArray, meshCount, UIArray, UICount);
@@ -299,7 +299,7 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 }
 
 // Update function to update all objects
-void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _deltaTime,
+void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, float* _previousTime, float* _deltaTime,
 	Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
 {
 	// Check for any events like key presses or mouse movements
@@ -356,6 +356,10 @@ void Update(Camera* _camera, float* _currentTime, float* _previousTime, float* _
 
 	// Update the camera
 	_camera->Update(*_currentTime, enableOrbiting);
+
+	// Update light manager
+	_lightManager->setSpotlight(_camera->GetCameraPosition(), _camera->GetCameraForwardDirection(), 
+		7.5f, 12.5f, glm::vec3(4.0f, 4.0f, 4.0f), 400.0f);
 
 
 }

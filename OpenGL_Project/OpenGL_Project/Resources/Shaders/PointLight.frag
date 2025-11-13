@@ -20,6 +20,16 @@ struct DirectionalLight
 	float SpecularStrength;
 };
 
+struct SpotLight
+{
+	vec3 Position;
+    vec3 Direction;
+    float CutOff;        // cos(inner angle)
+    float OuterCutOff;   // cos(outer angle)
+    vec3 Color;
+    float SpecularStrength;
+};
+
 //Input from vertex shader
 in vec2 FragTexCoords;
 in vec3 FragNormal;
@@ -36,6 +46,7 @@ uniform PointLight PointLightArray[MAX_POINT_LIGHTS];
 uniform int PointLightCount;
 
 uniform DirectionalLight Directional;
+uniform SpotLight Spotlight;
 
 
 
@@ -88,6 +99,15 @@ vec3 CalculateLight_Directional()
 	return LightOutput;
 }
 
+float CalcSpotlightIntensity(vec3 fragPos, vec3 normal) 
+{
+    vec3 lightDir = normalize(Spotlight.Position - fragPos);
+    float theta = dot(lightDir, normalize(-Spotlight.Direction));
+    float epsilon = Spotlight.CutOff - Spotlight.OuterCutOff;
+    float intensity = clamp((theta - Spotlight.OuterCutOff) / epsilon, 0.0, 1.0);
+    return intensity;
+}
+
 void main()
 {
 	// Ambient Component
@@ -99,6 +119,24 @@ void main()
 	}
 	TotalLightOutput += Ambient;
 	TotalLightOutput += CalculateLight_Directional();
+
+	// Spotlight
+	float spotIntensity = CalcSpotlightIntensity(FragPos, FragNormal);
+	if (spotIntensity > 0.0) 
+	{
+		vec3 SpotLightDir = normalize(Spotlight.Position - FragPos);
+		float diff = max(dot(FragNormal, SpotLightDir), 0.0);
+		vec3 diffuse = diff * Spotlight.Color;
+
+		// Specular
+		vec3 viewDir = normalize(CameraPos - FragPos);
+		vec3 reflectDir = reflect(-SpotLightDir, FragNormal);
+		float spec = pow(max(dot(viewDir, reflectDir), 0.0), ObjectShininess);
+		vec3 specular = Spotlight.SpecularStrength * spec * Spotlight.Color;
+
+		TotalLightOutput += (diffuse + specular) * spotIntensity;
+	}
+
 
 	// Calculate the final color
 	FinalColor = vec4(TotalLightOutput, 1.0f) * texture(Texture0, FragTexCoords);
