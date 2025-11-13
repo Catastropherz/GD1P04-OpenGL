@@ -50,6 +50,9 @@ bool isMousePositionActive = false;
 bool enableMouse = true;
 bool enableWireframe = false;
 bool isMouseOverButton = false;
+bool enablePointLight = true;
+bool enableDirectionalLight = true;
+bool enableSpotlight = true;
 
 // For defining which mesh is a button and which mesh should switch texture
 Mesh* button = nullptr;
@@ -126,7 +129,7 @@ int main()
 
 	// Create Light Manager
 	LightManager lightManager;
-	lightManager.setAmbientLightStrength(0.02f, glm::vec3(0.8f, 0.8f, 0.8f));
+	lightManager.setAmbientLightStrength(0.03f, glm::vec3(1.0f, 1.0f, 1.0f));
 	lightManager.addPointLight(glm::vec3(25.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
 	lightManager.setAttenuationForPointLight(0, 1.0f, 0.04f, 0.0075f);
 	lightManager.addPointLight(glm::vec3(-25.0f, 10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
@@ -358,8 +361,13 @@ void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, f
 	_camera->Update(*_currentTime, enableOrbiting);
 
 	// Update light manager
-	_lightManager->setSpotlight(_camera->GetCameraPosition(), _camera->GetCameraForwardDirection(), 
+	_lightManager->setSpotlight(_camera->GetCameraPosition(), _camera->GetCameraForwardDirection(),
 		7.5f, 12.5f, glm::vec3(4.0f, 4.0f, 4.0f), 400.0f);
+	_lightManager->togglePointLight(enablePointLight);
+	_lightManager->toggleDirectionalLight(enableDirectionalLight);
+	_lightManager->toggleSpotlight(enableSpotlight);
+
+
 
 
 }
@@ -426,19 +434,17 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	{
 		enableOrbiting = !enableOrbiting;
 	}
-	if (_key == GLFW_KEY_1 && _action == GLFW_PRESS) // Press 1 to toggle mouse cursor
+	if (_key == GLFW_KEY_1 && _action == GLFW_PRESS)
 	{
-		enableMouse = !enableMouse;
+		enablePointLight = !enablePointLight; // Toggle point light
 	}
-	if (_key == GLFW_KEY_2 && _action == GLFW_PRESS) // Press 2 to toggle wireframe mode
+	if (_key == GLFW_KEY_2 && _action == GLFW_PRESS)
 	{
-		enableWireframe = !enableWireframe;
+		enableDirectionalLight = !enableDirectionalLight; // Toggle directional light
 	}
-	if (_key == GLFW_KEY_3 && _action == GLFW_PRESS) // Press 3 to Print the current screen coordinates of the mouse
+	if (_key == GLFW_KEY_3 && _action == GLFW_PRESS)
 	{
-		isMousePositionActive = !isMousePositionActive; // Toggle mouse position display
-		if (isMousePositionActive)	std::cout << "Mouse position tracking activated." << std::endl;
-		else std::cout << "Mouse position tracking deactivated." << std::endl;
+		enableSpotlight = !enableSpotlight; // Toggle spotlight
 	}
 }
 

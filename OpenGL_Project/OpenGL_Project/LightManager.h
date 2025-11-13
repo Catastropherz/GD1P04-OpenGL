@@ -39,6 +39,9 @@ private:
 	unsigned int pointLightCount = 0;
 	DirectionalLight directionalLight;
 	Spotlight spotlight;
+	bool enablePointLight = true;
+	bool enableDirectionalLight = true;
+	bool enableSpotlight = true;
 
 public:
 	 LightManager();
@@ -61,5 +64,10 @@ public:
 	
 	// Apply light properties to the shader program
 	void applyLightsToShader(GLuint _shaderProgram);
+
+	// Toggle light
+	void togglePointLight(bool _enable);
+	void toggleDirectionalLight(bool _enable);
+	void toggleSpotlight(bool _enable);
 };
 
