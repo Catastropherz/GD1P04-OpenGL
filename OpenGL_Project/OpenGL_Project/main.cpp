@@ -31,6 +31,8 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 void TextInput(GLFWwindow* _window, unsigned int _codePoint);
 void MouseButtonInput(GLFWwindow* _window, int _button, int _action, int _mods);
 void CursorPositionInput(GLFWwindow* _window, double _xpos, double _ypos);
+void ScrollInput(GLFWwindow* _window, double _xoffset, double _yoffset);
+
 
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -38,7 +40,7 @@ glm::vec3 Scale = glm::vec3(1.0f, 1.0f, 1.0f);
 float RotationAngle = 0.0f; // Degrees
 
 // Camera parameters
-bool enableOrbiting = true;
+bool enableOrbiting = false;
 
 // Window size
 int WindowWidth = 800;
@@ -110,6 +112,7 @@ int main()
 	float PreviousTime = 0.0f;
 	float DeltaTime = 0.0f;
 	Camera camera(Window);
+	glfwSetWindowUserPointer(Window, &camera);
 	InitialSetup(&camera, WindowWidth, WindowHeight);
 
 	// Load and set up the objects ---------------------------------
@@ -266,6 +269,7 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	glfwSetKeyCallback(Window, KeyInput);
 	glfwSetMouseButtonCallback(Window, MouseButtonInput);
 	glfwSetCursorPosCallback(Window, CursorPositionInput);
+	glfwSetScrollCallback(Window, ScrollInput);
 
 	// Enable Depth testing for 3D
 	glEnable(GL_DEPTH_TEST);
@@ -359,6 +363,9 @@ void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, f
 
 	// Update the camera
 	_camera->Update(*_currentTime, enableOrbiting);
+	double mouseX, mouseY;
+	glfwGetCursorPos(Window, &mouseX, &mouseY);
+	_camera->ProcessMouseMovement(mouseX, mouseY);
 
 	// Update light manager
 	_lightManager->setSpotlight(_camera->GetCameraPosition(), _camera->GetCameraForwardDirection(),
@@ -375,37 +382,37 @@ void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, f
 //Query GLFW key states
 void ProcessInput(float _deltaTime, Camera* _camera , Mesh* _meshToMove)
 {
-	float speed = 20.0f;
+	float speed = 30.0f;
 
 	if (glfwGetKey(Window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
 		glm::vec3 direction = glm::vec3(0.0f, 1.0f, 0.0f); // Move up
-		_meshToMove->Move(direction * speed * _deltaTime); 
+		_camera->MoveCamera(direction * speed * _deltaTime);
 	}
 	if (glfwGetKey(Window, GLFW_KEY_E) == GLFW_PRESS)
 	{
 		glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f); // Move down
-		_meshToMove->Move(direction * speed * _deltaTime);
+		_camera->MoveCamera(direction * speed * _deltaTime);
 	}
 	if (glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
 	{
 		glm::vec3 direction = _camera->GetCameraRightDirection() * -1.0f; // Move left
-		_meshToMove->Move(direction * speed * _deltaTime);
+		_camera->MoveCamera(direction * speed * _deltaTime);
 	}
 	if (glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		glm::vec3 direction = _camera->GetCameraRightDirection(); // Move right
-		_meshToMove->Move(direction * speed * _deltaTime); 
+		_camera->MoveCamera(direction * speed * _deltaTime);
 	}
 	if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		glm::vec3 direction = _camera->GetCameraForwardDirection(); // Move forward
-		_meshToMove->Move(direction * speed * _deltaTime); 
+		_camera->MoveCamera(direction * speed * _deltaTime);
 	}
 	if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		glm::vec3 direction = _camera->GetCameraForwardDirection() * -1.0f; // Move backward
-		_meshToMove->Move(direction * speed * _deltaTime); 
+		_camera->MoveCamera(direction * speed * _deltaTime);
 	}
 }
 
@@ -491,5 +498,15 @@ void CursorPositionInput(GLFWwindow* _window, double _xpos, double _ypos)
 		// Exit hover state
 		isMouseOverButton = false;
 		button->ToggleTexture();
+	}
+}
+
+// Callback function called in response to scroll input. Processed during glfwPollEvents()
+void ScrollInput(GLFWwindow* _window, double _xoffset, double _yoffset)
+{
+	Camera* camera = static_cast<Camera*>(glfwGetWindowUserPointer(_window));
+	if (camera)
+	{
+		camera->ProcessMouseScroll(_yoffset);
 	}
 }

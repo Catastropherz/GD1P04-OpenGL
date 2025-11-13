@@ -37,6 +37,15 @@ private:
 	bool isOrbiting = true; // Orbiting movement around the origin
 	float orbitTime = 0.0f; // Storing orbit position
 
+	float yaw = -90.0f;
+	float pitch = 0.0f;
+	float mouseSensitivity = 0.2f;
+	double lastMouseX = 0.0;
+	double lastMouseY = 0.0;
+	bool firstMouse = true;
+
+	float fov = 45.0f;
+
 public:
 	Camera(GLFWwindow* _window);
 	~Camera();
@@ -68,5 +77,14 @@ public:
 	// Setter functions for the Projection Matrix (Orthographic)
 	//void SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top, float _nearPlane = 0.1f, float _farPlane = 100.0f);
 	void SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top);
+
+	// Move the camera in a specified direction
+	void MoveCamera(glm::vec3 _direction);
+
+	// Process mouse movement input
+	void ProcessMouseMovement(double _xpos, double _ypos);
+
+	// Process mouse scroll input
+	void ProcessMouseScroll(double _yoffset);
 };
 

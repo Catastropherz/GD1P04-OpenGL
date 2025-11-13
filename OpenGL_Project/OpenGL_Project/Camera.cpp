@@ -1,13 +1,14 @@
 #include "Camera.h"
+#include <algorithm>
 
 Camera::Camera(GLFWwindow* _window)
 {
 	Window = _window;
 	
-	position = glm::vec3(0.0f, 1.0f, 3.0f);
-	target = glm::vec3(0.0f, 0.0f, 0.0f);
+	position = glm::vec3(0.0f, 15.0f, 80.0f);
+	target = glm::vec3(0.0f, -15.0f, 0.0f);
 	upDirection = glm::vec3(0.0f, 1.0f, 0.0f);
-	lookDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+	lookDirection = glm::vec3(0.0f, -15.0f, -1.0f);
 
 	// Calculate the View Matrix from the camera variables
 	//center = Look Direction
@@ -102,6 +103,56 @@ void Camera::SetProjectionMatrix_Perspective(int _width, int _height, float _fov
 void Camera::SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top)
 {
 	projectionMatrix = glm::ortho(static_cast<float>(_left), static_cast<float>(_right), static_cast<float>(_bottom), static_cast<float>(_top));
+}
+
+void Camera::MoveCamera(glm::vec3 _direction)
+{
+	position += _direction;
+}
+
+void Camera::ProcessMouseMovement(double _xpos, double _ypos)
+{
+	if (firstMouse)
+	{
+		lastMouseX = _xpos;
+		lastMouseY = _ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = static_cast<float>(_xpos - lastMouseX);
+	float yoffset = static_cast<float>(lastMouseY - _ypos); // reversed: y ranges bottom to top
+	lastMouseX = _xpos;
+	lastMouseY = _ypos;
+
+	xoffset *= mouseSensitivity;
+	yoffset *= mouseSensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	// Clamp the pitch to prevent flipping
+	if (pitch < -89.0f) pitch = -89.0f;
+	if (pitch > 89.0f)  pitch = 89.0f;
+
+	// Update the camera's direction vector
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	lookDirection = glm::normalize(direction);
+	target = position + lookDirection;
+}
+
+void Camera::ProcessMouseScroll(double _yoffset)
+{
+	fov -= static_cast<float>(_yoffset);
+	fov = std::max(1.0f, std::min(90.0f, fov)); // Clamp FOV between 1 and 90 degrees
+
+	// Update the projection matrix with the new FOV
+	int width, height;
+	glfwGetFramebufferSize(Window, &width, &height);
+	SetProjectionMatrix_Perspective(width, height, fov, 0.1f, 1000.0f);
+
 }
 
 //void Camera::SetProjectionMatrix_Orthographic(int _left, int _right, int _bottom, int _top, float _nearPlane, float _farPlane)
