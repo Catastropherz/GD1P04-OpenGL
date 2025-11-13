@@ -27,6 +27,16 @@ void LightManager::addPointLight(glm::vec3 _position, glm::vec3 _color, float _s
 	}
 }
 
+void LightManager::setAttenuationForPointLight(int _index, float _constant, float _linear, float _exponent)
+{
+	if (_index >= 0 && _index < pointLightCount)
+	{
+		pointLightArray[_index].attenuationConstant = _constant;
+		pointLightArray[_index].attenuationLinear = _linear;
+		pointLightArray[_index].attenuationExponent = _exponent;
+	}
+}
+
 void LightManager::applyLightsToShader(GLuint _shaderProgram)
 {
 	glUniform3fv(glGetUniformLocation(_shaderProgram, "AmbientColor"), 1, glm::value_ptr(ambientColor));
@@ -38,5 +48,8 @@ void LightManager::applyLightsToShader(GLuint _shaderProgram)
 		glUniform3fv(glGetUniformLocation(_shaderProgram, (baseName + ".Position").c_str()), 1, glm::value_ptr(pointLightArray[i].position));
 		glUniform3fv(glGetUniformLocation(_shaderProgram, (baseName + ".Color").c_str()), 1, glm::value_ptr(pointLightArray[i].color));
 		glUniform1f(glGetUniformLocation(_shaderProgram, (baseName + ".SpecularStrength").c_str()), pointLightArray[i].specularStrength);
+		glUniform1f(glGetUniformLocation(_shaderProgram, (baseName + ".AttenuationConstant").c_str()), pointLightArray[i].attenuationConstant);
+		glUniform1f(glGetUniformLocation(_shaderProgram, (baseName + ".AttenuationLinear").c_str()), pointLightArray[i].attenuationLinear);
+		glUniform1f(glGetUniformLocation(_shaderProgram, (baseName + ".AttenuationExponent").c_str()), pointLightArray[i].attenuationExponent);
 	}
 }

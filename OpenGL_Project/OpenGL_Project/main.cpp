@@ -126,8 +126,11 @@ int main()
 	// Create Light Manager
 	LightManager lightManager;
 	lightManager.setAmbientLightStrength(0.2f, glm::vec3(1.0f, 1.0f, 1.0f));
-	lightManager.addPointLight(glm::vec3(10.0f, 5.0f, 10.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
-	lightManager.addPointLight(glm::vec3(-10.0f, 5.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f), 1.0f);
+	lightManager.addPointLight(glm::vec3(25.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
+	lightManager.setAttenuationForPointLight(0, 1.0f, 0.04f, 0.0075f);
+	lightManager.addPointLight(glm::vec3(-25.0f, 10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
+	lightManager.setAttenuationForPointLight(1, 1.0f, 0.04f, 0.0075f);
+
 
 
 	// Create mesh objects
@@ -143,6 +146,17 @@ int main()
 	meshTree.setTexture(&texture0);
 	meshTree.setSecondTexture(&texture1);
 	meshTree.SetLightManager(&lightManager);
+
+	Mesh meshRedLightCube(CUBE);
+	meshRedLightCube.setModel(glm::vec3(25.0f, 10.0f, 0.0f), glm::vec3(2.0f, 2.0f, 2.0f), RotationAngle);
+	meshRedLightCube.setProgram(&program.Program_Texture);
+	meshRedLightCube.setTexture(&textureButtonRed);
+
+	Mesh meshGreenLightCube(CUBE);
+	meshGreenLightCube.setModel(glm::vec3(-25.0f, 10.0f, 0.0f), glm::vec3(2.0f, 2.0f, 2.0f), RotationAngle);
+	meshGreenLightCube.setProgram(&program.Program_Texture);
+	meshGreenLightCube.setTexture(&textureButtonGreen);
+
 
 	Mesh meshBanner("Resources/Models/SM_Wep_Banner_05.obj");
 	meshBanner.setModel(glm::vec3(0.0f, -7.0f, 0.0f), glm::vec3(15.0f, 15.0f, 15.0f), RotationAngle);
@@ -161,7 +175,7 @@ int main()
 	button = &meshButton;
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshBarrel, &meshTree };
+	Mesh* meshArray[] = { &meshBarrel, &meshTree, &meshRedLightCube, &meshGreenLightCube };
 	Mesh* UIArray[] = { &meshButton };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 	int UICount = sizeof(UIArray) / sizeof(UIArray[0]);

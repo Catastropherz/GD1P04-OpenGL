@@ -7,6 +7,9 @@ struct PointLight
 	glm::vec3 color;
 	float specularStrength;
 
+	float attenuationConstant = 1.0f;
+	float attenuationLinear = 0.09f;
+	float attenuationExponent = 0.032f;
 };
 
 class LightManager
@@ -21,8 +24,17 @@ private:
 public:
 	 LightManager();
 	~LightManager();
+
+	// Set ambient light properties
 	void setAmbientLightStrength(float _strength, glm::vec3 _color);
+
+	// Add a point light (position, color, specular strength)
 	void addPointLight(glm::vec3 _position, glm::vec3 _color, float _specularStrength);
+	
+	// Set attenuation for a specific point light (index, constant, linear, exponent)
+	void setAttenuationForPointLight(int _index, float _constant, float _linear, float _exponent);
+	
+	// Apply light properties to the shader program
 	void applyLightsToShader(GLuint _shaderProgram);
 };
 

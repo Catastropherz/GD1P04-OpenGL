@@ -7,6 +7,10 @@ struct PointLight
 	vec3 Position;
 	vec3 Color;
 	float SpecularStrength;
+
+	float AttenuationConstant;
+	float AttenuationLinear;
+	float AttenuationExponent ;
 };
 
 //Input from vertex shader
@@ -45,7 +49,14 @@ vec3 CalculateLight_Point(int index)
 	float SpecularStrength = pow(max(dot(Norm, HalfwayVector), 0.0f), ObjectShininess);
 	vec3 Specular = PointLightArray[index].SpecularStrength * SpecularStrength * PointLightArray[index].Color;
 	
-	return Diffuse + Specular;
+	vec3 LightOutput = Diffuse + Specular;
+
+	float Distance = length(PointLightArray[index].Position - FragPos);
+	float Attenuation = PointLightArray[index].AttenuationConstant + 
+						(PointLightArray[index].AttenuationLinear * Distance) + 
+						(PointLightArray[index].AttenuationExponent * Distance * Distance);
+	LightOutput /= Attenuation;
+	return LightOutput;
 }
 
 void main()
