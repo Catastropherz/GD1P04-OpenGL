@@ -389,6 +389,11 @@ void Mesh::Render()
 		glUniformMatrix4fv(glGetUniformLocation(programToUse, "OrthoProjectionMat"), 1, GL_FALSE, glm::value_ptr(OrthoMat));
 
 	}
+	
+	if (lightManager != nullptr)
+	{
+		lightManager->applyLightsToShader(programToUse);
+	}
 
 	// Activate and bind the texture
 	glActiveTexture(GL_TEXTURE0);
@@ -546,6 +551,11 @@ bool Mesh::checkHover(double _xpos, double _ypos)
 		flipY < Position.y + (Scale.y * 0.5f);
 
 	return isInside;
+}
+
+void Mesh::SetLightManager(LightManager* _lightManager)
+{
+	lightManager = _lightManager;
 }
 
 void Mesh::SetSkybox(SkyBox* _skybox, TextureLoader* _reflectMap)

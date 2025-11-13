@@ -123,18 +123,26 @@ int main()
 	};
 	SkyBox skybox(&camera, skyboxFaces);
 
+	// Create Light Manager
+	LightManager lightManager;
+	lightManager.setAmbientLightStrength(0.2f, glm::vec3(1.0f, 1.0f, 1.0f));
+	lightManager.addPointLight(glm::vec3(10.0f, 5.0f, 10.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
+	lightManager.addPointLight(glm::vec3(-10.0f, 5.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f), 1.0f);
+
 
 	// Create mesh objects
 	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
-	meshBarrel.setModel(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(20.0f, 20.0f, 20.0f), RotationAngle);
+	meshBarrel.setModel(glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(20.0f, 20.0f, 20.0f), RotationAngle);
 	meshBarrel.setProgram(&program.Program_TexLight);
 	meshBarrel.setTexture(&texture0);
+	meshBarrel.SetLightManager(&lightManager);
 
 	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj", 
 		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(0.8f, 0.8f, 0.8f), RotationAngle, 100);
 	meshTree.setProgram(&program.Program_TexLightInstanced);
 	meshTree.setTexture(&texture0);
 	meshTree.setSecondTexture(&texture1);
+	meshTree.SetLightManager(&lightManager);
 
 	Mesh meshBanner("Resources/Models/SM_Wep_Banner_05.obj");
 	meshBanner.setModel(glm::vec3(0.0f, -7.0f, 0.0f), glm::vec3(15.0f, 15.0f, 15.0f), RotationAngle);
@@ -153,7 +161,7 @@ int main()
 	button = &meshButton;
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshBanner, &meshTree };
+	Mesh* meshArray[] = { &meshBarrel, &meshTree };
 	Mesh* UIArray[] = { &meshButton };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 	int UICount = sizeof(UIArray) / sizeof(UIArray[0]);
@@ -184,7 +192,7 @@ void Render(Camera* _camera, SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Render skybox first
-	_skybox->RenderSkybox();
+	//_skybox->RenderSkybox(); // Uncomment to see skybox
 
 	// Render mesh objects
 	if (_meshArray != nullptr)
@@ -203,7 +211,7 @@ void Render(Camera* _camera, SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount
 	 {
 		 for (int i = 0; i < _UICount; ++i)
 		 {
-			 _UIArray[i]->Render();
+			 //_UIArray[i]->Render(); // Uncomment to see UI
 		 }
 	 }
 	 // Re-enable depth testing

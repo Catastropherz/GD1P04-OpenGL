@@ -12,7 +12,7 @@
  **************************************************************************/
 
 #pragma once
-#include "SkyBox.h"
+#include "LightManager.h"
 #include <vector>
 
 enum MeshType
@@ -118,6 +118,9 @@ private:
 	float windowWidth = 800.0f;
 	float windowHeight = 800.0f;
 
+	// Light Manager
+	LightManager* lightManager = nullptr;
+
 public:
 
 	Mesh(MeshType _type);
@@ -162,6 +165,9 @@ public:
 
 	// Check if cursor is inside
 	bool checkHover(double _xpos, double _ypos);
+
+	// Set light manager
+	void SetLightManager(LightManager* _lightManager);
 
 
 };

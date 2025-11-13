@@ -135,6 +135,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="LightManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Program.cpp" />
@@ -151,6 +152,7 @@
     <None Include="Resources\Shaders\FixedTriangle.vert" />
     <None Include="Resources\Shaders\Lighting_BlinnPhong.frag" />
     <None Include="Resources\Shaders\Lighting_Reflect.frag" />
+    <None Include="Resources\Shaders\PointLight.frag" />
     <None Include="Resources\Shaders\PositionOnly.vert" />
     <None Include="Resources\Shaders\Skybox.frag" />
     <None Include="Resources\Shaders\Skybox.vert" />
@@ -166,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="LightManager.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Program.h" />
     <ClInclude Include="ShaderLoader.h" />
