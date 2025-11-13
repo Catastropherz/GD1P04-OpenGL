@@ -11,11 +11,6 @@
  Mail : sivakorn.tuangwilai@mds.ac.nz
  **************************************************************************/
 
-/*************
-TODO:
-Reflection map
-**************/
-
 #include "Mesh.h"
 
 
@@ -148,7 +143,7 @@ int main()
 	meshBarrel.SetLightManager(&lightManager);
 
 	Mesh meshTree("Resources/Models/SM_Env_Statue_04.obj", 
-		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(6.0f, 6.0f, 6.0f), RotationAngle, 100); // TODO : set this to 1000 instances
+		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(6.0f, 6.0f, 6.0f), RotationAngle, 1000);
 	meshTree.setProgram(&program.Program_TexLightInstanced);
 	meshTree.setTexture(&texture0);
 	meshTree.setSecondTexture(&texture1);

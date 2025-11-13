@@ -1,3 +1,16 @@
+/***********************************************************************
+ Bachelor of Software Engineering
+ Media Design School
+ Auckland
+ New Zealand
+ (c)
+ 2024 Media Design School
+ File Name : LightManager.h
+ Description : Handle lighting creation, movement, and updating
+ Author : Q Sivakorn Tuangwilai
+ Mail : sivakorn.tuangwilai@mds.ac.nz
+ **************************************************************************/
+
 #pragma once
 #include "SkyBox.h"
 
@@ -65,7 +78,7 @@ public:
 	// Apply light properties to the shader program
 	void applyLightsToShader(GLuint _shaderProgram);
 
-	// Toggle light
+	// Toggle lights
 	void togglePointLight(bool _enable);
 	void toggleDirectionalLight(bool _enable);
 	void toggleSpotlight(bool _enable);
