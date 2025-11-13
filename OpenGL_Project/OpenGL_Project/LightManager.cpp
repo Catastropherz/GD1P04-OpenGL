@@ -37,6 +37,13 @@ void LightManager::setAttenuationForPointLight(int _index, float _constant, floa
 	}
 }
 
+void LightManager::setDirectionalLight(glm::vec3 _direction, glm::vec3 _color, float _specularStrength)
+{
+	directionalLight.direction = _direction;
+	directionalLight.color = _color;
+	directionalLight.specularStrength = _specularStrength;
+}
+
 void LightManager::applyLightsToShader(GLuint _shaderProgram)
 {
 	glUniform3fv(glGetUniformLocation(_shaderProgram, "AmbientColor"), 1, glm::value_ptr(ambientColor));
@@ -52,4 +59,8 @@ void LightManager::applyLightsToShader(GLuint _shaderProgram)
 		glUniform1f(glGetUniformLocation(_shaderProgram, (baseName + ".AttenuationLinear").c_str()), pointLightArray[i].attenuationLinear);
 		glUniform1f(glGetUniformLocation(_shaderProgram, (baseName + ".AttenuationExponent").c_str()), pointLightArray[i].attenuationExponent);
 	}
+
+	glUniform3fv(glGetUniformLocation(_shaderProgram, "Directional.Direction"), 1, glm::value_ptr(directionalLight.direction));
+	glUniform3fv(glGetUniformLocation(_shaderProgram, "Directional.Color"), 1, glm::value_ptr(directionalLight.color));
+	glUniform1f(glGetUniformLocation(_shaderProgram, "Directional.SpecularStrength"), directionalLight.specularStrength);
 }

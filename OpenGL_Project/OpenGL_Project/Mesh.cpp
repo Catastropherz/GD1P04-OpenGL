@@ -490,13 +490,25 @@ void Mesh::GenerateModelMatInstances(int _count)
 	Count_Instanced = _count;
 	modelMatInstances.resize(Count_Instanced);
 
+	int gridSize = static_cast<int>(std::ceil(std::sqrt(static_cast<float>(Count_Instanced))));
+	float spacing = 25.0f;
+
 	// Generate random transformations for each instance
 	for (int i = 0; i < Count_Instanced; i++)
 	{
+		int x = i % gridSize;
+		int z = i / gridSize;
+
+		// Center the grid around the origin
+		float offsetX = (x - gridSize / 2) * spacing;
+		float offsetZ = (z - gridSize / 2) * spacing;
+
+		glm::vec3 gridPos = glm::vec3(offsetX, 0.0f, offsetZ);
+
 		glm::vec3 randPos = glm::vec3(
-			((rand() % 4000) / 100.0f) - 20.0f, // X: -20.0 to 20.0
+			((rand() % 40000) / 100.0f) - 200.0f, // X: -200.0 to 200.0
 			0.0f, // Fixed Y position
-			((rand() % 4000) / 100.0f) - 20.0f  // Z: -20.0 to 20.0
+			((rand() % 40000) / 100.0f) - 200.0f  // Z: -200.0 to 200.0
 		);
 
 		glm::vec3 randRot = glm::vec3(
@@ -512,7 +524,8 @@ void Mesh::GenerateModelMatInstances(int _count)
 			((rand() % 400) / 1000.0f) + 0.8f
 		);
 
-		glm::mat4 transMat = glm::translate(TranslationMat, randPos); // Translate based on original translation matrix
+		//glm::mat4 transMat = glm::translate(TranslationMat, randPos); // Random position based on original translation
+		glm::mat4 transMat = glm::translate(TranslationMat, gridPos); // Grid position based on original translation
 		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), glm::radians(randRot.y), glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 scalMat = glm::scale(ScaleMat, randScale); // Scale based on original scale matrix
 		modelMatInstances[i] = transMat * rotMat * scalMat;

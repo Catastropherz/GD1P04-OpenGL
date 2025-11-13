@@ -13,6 +13,13 @@ struct PointLight
 	float AttenuationExponent ;
 };
 
+struct DirectionalLight
+{
+	vec3 Direction;
+	vec3 Color;
+	float SpecularStrength;
+};
+
 //Input from vertex shader
 in vec2 FragTexCoords;
 in vec3 FragNormal;
@@ -27,6 +34,8 @@ uniform float ObjectShininess			= 32.0f;
 
 uniform PointLight PointLightArray[MAX_POINT_LIGHTS];
 uniform int PointLightCount;
+
+uniform DirectionalLight Directional;
 
 
 
@@ -59,6 +68,26 @@ vec3 CalculateLight_Point(int index)
 	return LightOutput;
 }
 
+vec3 CalculateLight_Directional()
+{
+	// Light Direction
+	vec3 Norm = normalize(FragNormal);
+	vec3 LightDir = normalize(Directional.Direction);
+	
+	// Diffuse Component
+	float DiffusalStrength = max(dot(Norm, -LightDir), 0.0f);
+	vec3 Diffuse = DiffusalStrength * Directional.Color;
+	
+	// Specular Component
+	vec3 ReverseViewDir = normalize(CameraPos - FragPos);
+	vec3 HalfwayVector = normalize(-LightDir + ReverseViewDir);
+	float SpecularStrength = pow(max(dot(Norm, HalfwayVector), 0.0f), ObjectShininess);
+	vec3 Specular = Directional.SpecularStrength * SpecularStrength * Directional.Color;
+	
+	vec3 LightOutput = Diffuse + Specular;
+	return LightOutput;
+}
+
 void main()
 {
 	// Ambient Component
@@ -69,6 +98,7 @@ void main()
 		TotalLightOutput += CalculateLight_Point(i);
 	}
 	TotalLightOutput += Ambient;
+	TotalLightOutput += CalculateLight_Directional();
 
 	// Calculate the final color
 	FinalColor = vec4(TotalLightOutput, 1.0f) * texture(Texture0, FragTexCoords);

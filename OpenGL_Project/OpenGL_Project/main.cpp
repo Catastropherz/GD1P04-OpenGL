@@ -65,6 +65,7 @@ TextureLoader texture0Map;
 TextureLoader texture1;
 TextureLoader textureButtonRed;
 TextureLoader textureButtonGreen;
+TextureLoader textureGround;
 
 //--------------------------------------------------
 
@@ -125,12 +126,12 @@ int main()
 
 	// Create Light Manager
 	LightManager lightManager;
-	lightManager.setAmbientLightStrength(0.2f, glm::vec3(1.0f, 1.0f, 1.0f));
+	lightManager.setAmbientLightStrength(0.05f, glm::vec3(1.0f, 1.0f, 1.0f));
 	lightManager.addPointLight(glm::vec3(25.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
 	lightManager.setAttenuationForPointLight(0, 1.0f, 0.04f, 0.0075f);
 	lightManager.addPointLight(glm::vec3(-25.0f, 10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
 	lightManager.setAttenuationForPointLight(1, 1.0f, 0.04f, 0.0075f);
-
+	lightManager.setDirectionalLight(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.3f, 0.3f, 0.3f), 0.5f);
 
 
 	// Create mesh objects
@@ -140,12 +141,18 @@ int main()
 	meshBarrel.setTexture(&texture0);
 	meshBarrel.SetLightManager(&lightManager);
 
-	Mesh meshTree("Resources/Models/SM_Env_Tree_Dandelion_01.obj", 
-		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(0.8f, 0.8f, 0.8f), RotationAngle, 100);
+	Mesh meshTree("Resources/Models/SM_Env_Statue_04.obj", 
+		glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(6.0f, 6.0f, 6.0f), RotationAngle, 100); // TODO : set this to 1000 instances
 	meshTree.setProgram(&program.Program_TexLightInstanced);
 	meshTree.setTexture(&texture0);
 	meshTree.setSecondTexture(&texture1);
 	meshTree.SetLightManager(&lightManager);
+
+	Mesh meshGround(CUBE);
+	meshGround.setModel(glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(2000.0f, 1.0f, 2000.0f), RotationAngle);
+	meshGround.setProgram(&program.Program_TexLight);
+	meshGround.setTexture(&textureGround);
+	meshGround.SetLightManager(&lightManager);
 
 	Mesh meshRedLightCube(CUBE);
 	meshRedLightCube.setModel(glm::vec3(25.0f, 10.0f, 0.0f), glm::vec3(2.0f, 2.0f, 2.0f), RotationAngle);
@@ -175,7 +182,7 @@ int main()
 	button = &meshButton;
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshBarrel, &meshTree, &meshRedLightCube, &meshGreenLightCube };
+	Mesh* meshArray[] = { &meshBarrel, &meshTree, &meshRedLightCube, &meshGreenLightCube, &meshGround };
 	Mesh* UIArray[] = { &meshButton };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 	int UICount = sizeof(UIArray) / sizeof(UIArray[0]);
@@ -242,7 +249,8 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	srand((unsigned int)time(NULL));
 
 	// Set the clear color
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	//glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Maps the range of window size to NDC  (-1 to 1)
 	glViewport(0, 0, _windowWidth, _windowHeight);
@@ -282,6 +290,7 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	texture1.LoadTexture("Resources/Textures/Dungeons_Texture_03.png");
 	textureButtonRed.LoadTexture("Resources/Textures/Red.png");
 	textureButtonGreen.LoadTexture("Resources/Textures/Green.png");
+	textureGround.LoadTexture("Resources/Textures/Ground.png");
 
 		
 	// Enable blending
