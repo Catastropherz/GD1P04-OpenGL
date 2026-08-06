@@ -177,7 +177,7 @@ int main()
 	Mesh meshButton(QUAD);
 	meshButton.setModel(glm::vec3(100.0f, 700.0f, 0.0f), glm::vec3(100.0f, 100.0f, 1.0f), 0.0f);
 	meshButton.setProgram(&program.Program_TextureUI);
-	meshButton.SetOrtho(WindowWidth, WindowHeight);
+	meshButton.SetOrtho(static_cast<float>(WindowWidth), static_cast<float>(WindowHeight));
 	meshButton.setTexture(&textureButtonRed);
 	meshButton.setSecondTexture(&textureButtonGreen);
 	button = &meshButton;

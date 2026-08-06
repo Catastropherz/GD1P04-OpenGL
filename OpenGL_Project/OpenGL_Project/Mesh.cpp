@@ -555,7 +555,7 @@ void Mesh::ToggleTexture()
 
 bool Mesh::checkHover(double _xpos, double _ypos)
 {
-	float flipY = windowHeight - _ypos;
+	float flipY = static_cast<float>(windowHeight - _ypos);
 
 	bool isInside =
 		_xpos >= Position.x - (Scale.x * 0.5f) &&

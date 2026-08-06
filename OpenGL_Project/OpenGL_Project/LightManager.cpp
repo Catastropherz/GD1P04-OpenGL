@@ -29,7 +29,8 @@ void LightManager::addPointLight(glm::vec3 _position, glm::vec3 _color, float _s
 
 void LightManager::setAttenuationForPointLight(int _index, float _constant, float _linear, float _exponent)
 {
-	if (_index >= 0 && _index < pointLightCount)
+	// Avoid signed/unsigned comparison warning (C4018) by casting pointLightCount to int
+	if (_index >= 0 && _index < static_cast<int>(pointLightCount))
 	{
 		pointLightArray[_index].attenuationConstant = _constant;
 		pointLightArray[_index].attenuationLinear = _linear;
