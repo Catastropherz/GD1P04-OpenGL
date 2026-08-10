@@ -68,7 +68,7 @@ float Mesh_Terrain::Average(unsigned int Row, unsigned int Col, const HeightMapI
             int evalRow = (int)Row + r;
             int evalCol = (int)Col + c;
 
-            // Bounds check
+            // Bounds check: Row iterates Width, Col iterates Depth
             if (evalRow >= 0 && evalRow < (int)BuildInfo.Width &&
                 evalCol >= 0 && evalCol < (int)BuildInfo.Depth)
             {
@@ -85,6 +85,7 @@ void Mesh_Terrain::SmoothHeights(const HeightMapInfo& BuildInfo)
 {
     std::vector<float> SmoothedMap(HeightMap.size());
 
+    // Iterate rows (Width) then columns (Depth)
     for (unsigned int Row = 0; Row < BuildInfo.Width; Row++)
     {
         for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
@@ -107,22 +108,24 @@ void Mesh_Terrain::BuildVertexData(const HeightMapInfo& BuildInfo)
     float TexU = 1.0f / (float)(BuildInfo.Width - 1);
     float TexV = 1.0f / (float)(BuildInfo.Depth - 1);
 
-    for (unsigned int Row = 0; Row < BuildInfo.Width; Row++)
+    // Rows iterate over Depth, Columns iterate over Width
+    for (unsigned int Row = 0; Row < BuildInfo.Depth; Row++)
     {
         float PosZ = HalfDepth - (Row * BuildInfo.CellSpacing);
 
-        for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
+        for (unsigned int Col = 0; Col < BuildInfo.Width; Col++)
         {
-            // FIX: use Depth for column stride (consistent with HeightMap and indices)
-            int Index = Row * BuildInfo.Depth + Col;
+            int Index = Row * BuildInfo.Width + Col;
             float PosX = -HalfWidth + (Col * BuildInfo.CellSpacing);
-            float PosY = HeightMap[Index];
+            // Apply height scale to control vertical exaggeration
+            float PosY = HeightMap[Index] * BuildInfo.HeightScale;
 
             Vertices[Index].position = glm::vec3(PosX, PosY, PosZ);
             Vertices[Index].texcoord = glm::vec2(Col * TexU, Row * TexV);
             Vertices[Index].normal = glm::vec3(0.0f, 1.0f, 0.0f);
         }
-    }
+
+}
 }
 
 void Mesh_Terrain::GenerateNormals(const HeightMapInfo& BuildInfo)
@@ -134,22 +137,24 @@ void Mesh_Terrain::GenerateNormals(const HeightMapInfo& BuildInfo)
         for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
         {
             float RowNeg = HeightMap[(Row == 0 ? Row : Row - 1) * BuildInfo.Depth + Col];
-            float RowPos = HeightMap[(Row == BuildInfo.Width - 1 ? Row : Row + 1) * BuildInfo.Depth + Col];
+            float RowPos = HeightMap[(Row < BuildInfo.Width - 1 ? Row + 1 : Row) * BuildInfo.Depth + Col];
             float ColNeg = HeightMap[Row * BuildInfo.Depth + (Col == 0 ? Col : Col - 1)];
-            float ColPos = HeightMap[Row * BuildInfo.Depth + (Col == BuildInfo.Depth - 1 ? Col : Col + 1)];
+            float ColPos = HeightMap[Row * BuildInfo.Depth + (Col < BuildInfo.Depth - 1 ? Col +1 : Col)];
 
-            float dY_dX = (RowNeg - RowPos);
-            if (Row == 0 || Row == BuildInfo.Width - 1) {
-                dY_dX *= 2.0f;
+            float X = (RowNeg - RowPos);
+            if (Row == 0 || Row == BuildInfo.Width - 1) 
+            {
+                X *= 2.0f;
             }
 
-            float dY_dZ = (ColPos - ColNeg);
-            if (Col == 0 || Col == BuildInfo.Depth - 1) {
-                dY_dZ *= 2.0f;
+            float Y = (ColPos - ColNeg);
+            if (Col == 0 || Col == BuildInfo.Depth - 1) 
+            {
+                Y *= 2.0f;
             }
 
-            glm::vec3 TangentZ(0.0f, dY_dZ * InvCellSpacing, 1.0f);
-            glm::vec3 TangentX(1.0f, dY_dX * InvCellSpacing, 0.0f);
+            glm::vec3 TangentZ(0.0f, X * InvCellSpacing, 1.0f);
+            glm::vec3 TangentX(1.0f, Y * InvCellSpacing, 0.0f);
 
             glm::vec3 Normal = glm::cross(TangentZ, TangentX);
             Normal = glm::normalize(Normal);
@@ -170,15 +175,20 @@ void Mesh_Terrain::BuildIndexData(const HeightMapInfo& BuildInfo)
     {
         for (unsigned int Col = 0; Col < (BuildInfo.Depth - 1); Col++)
         {
-            // Triangle 1
-            Indices[Index++] = Row * BuildInfo.Depth + Col;
-            Indices[Index++] = Row * BuildInfo.Depth + Col + 1;
-            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col;
+            unsigned int v0 = Row * BuildInfo.Depth + Col;
+            unsigned int v1 = Row * BuildInfo.Depth + (Col + 1);
+            unsigned int v2 = (Row + 1) * BuildInfo.Depth + Col;
+            unsigned int v3 = (Row + 1) * BuildInfo.Depth + (Col + 1);
 
-            // Triangle 2
-            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col;
-            Indices[Index++] = Row * BuildInfo.Depth + Col + 1;
-            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col + 1;
+            // Triangle 1: v0, v1, v2
+            Indices[Index++] = v0;
+            Indices[Index++] = v1;
+            Indices[Index++] = v2;
+
+            // Triangle 2: v2, v1, v3
+            Indices[Index++] = v2;
+            Indices[Index++] = v1;
+            Indices[Index++] = v3;
         }
     }
 }
