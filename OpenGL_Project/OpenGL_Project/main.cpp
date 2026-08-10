@@ -13,6 +13,7 @@
 
 #pragma once
 #include "Mesh_Terrain.h"
+#include "PerlinNoise.h"
 
 
 GLFWwindow* Window = nullptr;
@@ -28,7 +29,7 @@ void TextInput(GLFWwindow* _window, unsigned int _codePoint);
 void MouseButtonInput(GLFWwindow* _window, int _button, int _action, int _mods);
 void CursorPositionInput(GLFWwindow* _window, double _xpos, double _ypos);
 void ScrollInput(GLFWwindow* _window, double _xoffset, double _yoffset);
-
+void CreatePerlinScene(Program* program);
 
 // Object Matrices and Components -------------------
 glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -70,6 +71,26 @@ TextureLoader textureGround;
 TextureLoader textureGrass;
 TextureLoader textureSnow;
 TextureLoader textureStone;
+
+// Perlin scene globals
+TextureLoader textureNoiseGrey;
+TextureLoader textureNoiseGradient;
+TextureLoader textureNoiseAnimated;
+Mesh* meshNoiseGrey = nullptr;
+Mesh* meshNoiseGradient = nullptr;
+Mesh* meshNoiseAnimated = nullptr;
+bool perlinSceneRequested = false;
+bool perlinSceneLoaded = false;
+const int perlinAnimCols = 4;
+const int perlinAnimRows = 4;
+// Keep a pointer to the main terrain so we can reload heightmaps
+Mesh_Terrain* globalTerrain = nullptr;
+bool restoreOriginalRequested = false;
+// Original terrain info (used to restore)
+const std::string originalHeightmapPath = "Resources/Heightmaps/Heightmap0.raw";
+const int originalHeightmapWidth = 512;
+const int originalHeightmapDepth = 512;
+const float originalCellSpacing = 1.0f;
 
 //--------------------------------------------------
 
@@ -154,6 +175,9 @@ int main()
 	terrain.BuildIndexData(info);
 	terrain.SetupMesh();
 
+	// store global pointer so CreatePerlinScene / KeyInput can reload terrain
+	globalTerrain = &terrain;
+
 	// Attach Shader Program, Textures, and Lights
 	terrain.setProgram(&program.Program_TextureTerrain);
 	terrain.setTexture1(&textureGrass);
@@ -224,6 +248,58 @@ int main()
 		// Update all objects and run the processes
 		Update(&camera, &lightManager, &CurrentTime, &PreviousTime, &DeltaTime, &terrain, meshArray, meshCount, UIArray, UICount);
 
+		// If the user requested the Perlin scene (pressing '2'), create it now where we have access to 'program'
+		if (perlinSceneRequested)
+		{
+			// If already loaded, remove previous perlin UI quads so we can recreate with a new seed
+			if (perlinSceneLoaded)
+			{
+				if (meshNoiseGrey) { delete meshNoiseGrey; meshNoiseGrey = nullptr; }
+				if (meshNoiseGradient) { delete meshNoiseGradient; meshNoiseGradient = nullptr; }
+				if (meshNoiseAnimated) { delete meshNoiseAnimated; meshNoiseAnimated = nullptr; }
+				perlinSceneLoaded = false;
+			}
+
+			CreatePerlinScene(&program);
+			perlinSceneLoaded = true;
+			perlinSceneRequested = false;
+		}
+
+		// If user requested restoring original terrain (pressing '1') do it here
+		if (restoreOriginalRequested && globalTerrain != nullptr)
+		{
+			// Restore original heightmap
+			HeightMapInfo origInfo;
+			origInfo.FilePath = originalHeightmapPath;
+			origInfo.Width = originalHeightmapWidth;
+			origInfo.Depth = originalHeightmapDepth;
+			origInfo.CellSpacing = originalCellSpacing;
+
+			globalTerrain->LoadHeightMap(origInfo);
+			globalTerrain->SmoothHeights(origInfo);
+			globalTerrain->BuildVertexData(origInfo);
+			globalTerrain->GenerateNormals(origInfo);
+			globalTerrain->BuildIndexData(origInfo);
+			globalTerrain->SetupMesh();
+
+			// Re-attach shaders/textures/lights
+			globalTerrain->setProgram(&program.Program_TextureTerrain);
+			globalTerrain->setTexture1(&textureGrass);
+			globalTerrain->setTexture2(&textureGround);
+			globalTerrain->setTexture3(&textureStone);
+			globalTerrain->setTexture4(&textureSnow);
+			globalTerrain->SetLightManager(&lightManager);
+			globalTerrain->setModel(glm::vec3(0.0f, 0.0f, 0.0f));
+
+			// Delete Perlin UI quads and hide them
+			if (meshNoiseGrey) { delete meshNoiseGrey; meshNoiseGrey = nullptr; }
+			if (meshNoiseGradient) { delete meshNoiseGradient; meshNoiseGradient = nullptr; }
+			if (meshNoiseAnimated) { delete meshNoiseAnimated; meshNoiseAnimated = nullptr; }
+
+			perlinSceneLoaded = false;
+			restoreOriginalRequested = false;
+		}
+
 		// Render all objects
 		Render(&camera, &skybox, &terrain ,meshArray, meshCount, UIArray, UICount);
 	}
@@ -261,7 +337,7 @@ void Render(Camera* _camera, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _mes
 
 	// Render UI --------
 	// Temporarily Disable Depth Testing
-    // UI elements should always be drawn on top, regardless of their Z position.
+	// UI elements should always be drawn on top, regardless of their Z position.
 	glDisable(GL_DEPTH_TEST);
 	 if (_UIArray != nullptr)
 	 {
@@ -269,6 +345,14 @@ void Render(Camera* _camera, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _mes
 		 {
 			 //_UIArray[i]->Render(); // Uncomment to see UI
 		 }
+	 }
+
+	 // If Perlin scene is loaded, render the three quads as UI overlays
+	 if (perlinSceneLoaded)
+	 {
+		 if (meshNoiseGrey) meshNoiseGrey->Render();
+		 if (meshNoiseGradient) meshNoiseGradient->Render();
+		 if (meshNoiseAnimated) meshNoiseAnimated->Render();
 	 }
 	 // Re-enable depth testing
 	 glEnable(GL_DEPTH_TEST);
@@ -410,8 +494,17 @@ void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, f
 	_lightManager->toggleDirectionalLight(enableDirectionalLight);
 	_lightManager->toggleSpotlight(enableSpotlight);
 
+	// Update Perlin scene animated texture and UI quads
+	if (perlinSceneLoaded)
+	{
+		// Advance animated sprite sheet
+		textureNoiseAnimated.AnimateSpriteSheet(*_currentTime);
 
-
+		// Update the UI quads (not part of UIArray)
+		if (meshNoiseGrey) meshNoiseGrey->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
+		if (meshNoiseGradient) meshNoiseGradient->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
+		if (meshNoiseAnimated) meshNoiseAnimated->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
+	}
 
 }
 
@@ -473,19 +566,25 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	{
 		glfwSetWindowShouldClose(_window, true); // Close the window when Escape is pressed
 	}
-	if (_key == GLFW_KEY_TAB && _action == GLFW_PRESS) // Press Space to toggle camera orbiting
+	if (_key == GLFW_KEY_TAB && _action == GLFW_PRESS) // Press Tab to toggle camera orbiting
 	{
 		enableOrbiting = !enableOrbiting;
 	}
-	if (_key == GLFW_KEY_1 && _action == GLFW_PRESS)
+	if (_key == GLFW_KEY_7 && _action == GLFW_PRESS)
 	{
 		enablePointLight = !enablePointLight; // Toggle point light
 	}
+	if (_key == GLFW_KEY_1 && _action == GLFW_PRESS)
+	{
+		// Request restoration of the original terrain (hide Perlin UI overlays)
+		restoreOriginalRequested = true;
+	}
 	if (_key == GLFW_KEY_2 && _action == GLFW_PRESS)
 	{
-		enableDirectionalLight = !enableDirectionalLight; // Toggle directional light
+		// Load Perlin noise scene when pressing '2'
+		perlinSceneRequested = true;
 	}
-	if (_key == GLFW_KEY_3 && _action == GLFW_PRESS)
+	if (_key == GLFW_KEY_8 && _action == GLFW_PRESS)
 	{
 		enableSpotlight = !enableSpotlight; // Toggle spotlight
 	}
@@ -544,5 +643,75 @@ void ScrollInput(GLFWwindow* _window, double _xoffset, double _yoffset)
 	if (camera)
 	{
 		camera->ProcessMouseScroll(_yoffset);
+	}
+}
+
+// Create Perlin scene assets: generate images, load textures, create quads
+void CreatePerlinScene(Program* program)
+{
+	PerlinNoise pn;
+	unsigned int w = 512;
+	unsigned int h = 512;
+
+	std::string base = "Resources/Textures/Perlin/perlin";
+	pn.GenerateAndSaveNoise(w, h, base);
+
+	std::string seedStr = std::to_string(pn.seed);
+	std::string greyPath = base + "_grey_" + seedStr + ".jpg";
+	std::string gradPath = base + "_grad_" + seedStr + ".jpg";
+	std::string animPath = base + "_anim_" + seedStr + ".jpg";
+
+	// Load textures
+	textureNoiseGrey.LoadTexture(greyPath.c_str());
+	textureNoiseGradient.LoadTexture(gradPath.c_str());
+	textureNoiseAnimated.LoadTexture(animPath.c_str());
+	textureNoiseAnimated.SetSpriteSheetParameters(perlinAnimCols, perlinAnimRows);
+
+	// Create three UI quads to display the textures
+	// Greyscale
+	meshNoiseGrey = new Mesh(QUAD);
+	meshNoiseGrey->setProgram(&program->Program_TextureUI);
+	meshNoiseGrey->SetOrtho(WindowWidth, WindowHeight);
+	meshNoiseGrey->setTexture(&textureNoiseGrey);
+	meshNoiseGrey->setModel(glm::vec3(50.0f, 50.0f, 0.0f), glm::vec3(256.0f, 256.0f, 1.0f), 0.0f);
+
+	// Gradient
+	meshNoiseGradient = new Mesh(QUAD);
+	meshNoiseGradient->setProgram(&program->Program_TextureUI);
+	meshNoiseGradient->SetOrtho(WindowWidth, WindowHeight);
+	meshNoiseGradient->setTexture(&textureNoiseGradient);
+	meshNoiseGradient->setModel(glm::vec3(320.0f, 50.0f, 0.0f), glm::vec3(256.0f, 256.0f, 1.0f), 0.0f);
+
+	// Animated sprite sheet
+	meshNoiseAnimated = new Mesh(QUAD);
+	meshNoiseAnimated->setProgram(&program->Program_TextureUI);
+	meshNoiseAnimated->SetOrtho(WindowWidth, WindowHeight);
+	meshNoiseAnimated->setTexture(&textureNoiseAnimated);
+	meshNoiseAnimated->setModel(glm::vec3(590.0f, 50.0f, 0.0f), glm::vec3(256.0f, 256.0f, 1.0f), 0.0f);
+
+	// Reload the terrain using the generated RAW greyscale heightmap
+	if (globalTerrain)
+	{
+		HeightMapInfo pInfo;
+		pInfo.FilePath = base + ".raw"; // same base used when saving RAW
+		pInfo.Width = static_cast<int>(w);
+		pInfo.Depth = static_cast<int>(h);
+		pInfo.CellSpacing = 1.0f;
+
+		globalTerrain->LoadHeightMap(pInfo);
+		globalTerrain->SmoothHeights(pInfo);
+		globalTerrain->BuildVertexData(pInfo);
+		globalTerrain->GenerateNormals(pInfo);
+		globalTerrain->BuildIndexData(pInfo);
+		globalTerrain->SetupMesh();
+
+		// Attach Shader Program, Textures, and Lights
+		globalTerrain->setProgram(&program->Program_TextureTerrain);
+		globalTerrain->setTexture1(&textureGrass);
+		globalTerrain->setTexture2(&textureGround);
+		globalTerrain->setTexture3(&textureStone);
+		globalTerrain->setTexture4(&textureSnow);
+		// Note: lightManager is not available here; the terrain's light manager will remain as before
+		globalTerrain->setModel(glm::vec3(0.0f, 0.0f, 0.0f));
 	}
 }

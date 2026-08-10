@@ -5,7 +5,7 @@ Camera::Camera(GLFWwindow* _window)
 {
 	Window = _window;
 	
-	position = glm::vec3(0.0f, 15.0f, 80.0f);
+	position = glm::vec3(0.0f, 300.0f, 500.0f);
 	target = glm::vec3(0.0f, -15.0f, 0.0f);
 	upDirection = glm::vec3(0.0f, 1.0f, 0.0f);
 	lookDirection = glm::vec3(0.0f, -15.0f, -1.0f);

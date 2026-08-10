@@ -13,8 +13,7 @@
 #include <ctime>
 #include <algorithm>
 
-// Default constructor initializes seed using a high-resolution clock to
-// ensure different seeds even when the scene is reloaded quickly.
+// Default constructor initializes seed using a high-resolution clock
 PerlinNoise::PerlinNoise()
 {
     auto now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -116,39 +115,123 @@ double PerlinNoise::TotalNoisePerPoint(double x, double y)
 // Generates pixels and exports RAW (heightmap) and JPG files
 void PerlinNoise::GenerateAndSaveNoise(unsigned int width, unsigned int height, const std::string& saveFilePath) 
 {
-    // Re-seed on each generation using high-resolution time so repeated
-    // scene loads generate different noise textures.
+    // Re-seed on each generation using high-resolution time so repeated scene loads generate different noise textures.
     auto now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     seed = static_cast<int>(now & 0x7fffffff);
 
-    std::vector<uint8_t> pixels(width * height);
-    int index = 0;
+    // Single channel grayscale pixels
+    std::vector<uint8_t> greyPixels(width * height);
 
-    for (unsigned int col = 0; col < height; col++) 
+    auto computeGrey = [&](int x, int y) -> uint8_t {
+        double n = TotalNoisePerPoint(x, y);
+        double mapped = (n + 1.0) * 0.5 * 255.0;
+        mapped = glm::clamp(mapped, 0.0, 255.0);
+        return static_cast<uint8_t>(mapped);
+    };
+
+    // Fill grayscale pixels
+    for (unsigned int j = 0; j < height; ++j)
     {
-        for (unsigned int row = 0; row < width; row++) 
+        for (unsigned int i = 0; i < width; ++i)
         {
-            float noise = static_cast<float>(TotalNoisePerPoint(row, col));
-
-            // Map/scale value from [-1, 1] range to [0, 255] byte range
-            noise = (noise + 1.0f) * 0.5f * 255.0f;
-
-            // Clamp value to safe 8-bit bounds
-            noise = glm::clamp(noise, 0.0f, 255.0f);
-
-            pixels[index++] = static_cast<uint8_t>(noise);
+            greyPixels[j * width + i] = computeGrey(i, j);
         }
     }
 
-    // Create RAW file
+    // Save RAW file
     std::ofstream rawFile(saveFilePath + ".raw", std::ios_base::binary);
     if (rawFile)
     {
-        rawFile.write(reinterpret_cast<char*>(pixels.data()), static_cast<std::streamsize>(pixels.size()));
+        rawFile.write(reinterpret_cast<char*>(greyPixels.data()), static_cast<std::streamsize>(greyPixels.size()));
         rawFile.close();
     }
 
-    // Create JPG file using stb_image_write
-    std::string jpgPath = saveFilePath + "_" + std::to_string(seed) + ".jpg";
-    stbi_write_jpg(jpgPath.c_str(), width, height, 1, pixels.data(), 100);
+    // Write grayscale JPG
+    std::string greyPath = saveFilePath + "_grey_" + std::to_string(seed) + ".jpg";
+    stbi_write_jpg(greyPath.c_str(), width, height, 1, greyPixels.data(), 100);
+
+    // Create RGB gradient image (white, yellow, red, black)
+    std::vector<uint8_t> gradPixels(width * height * 3);
+    auto lerp = [](double a, double b, double t) { return a * (1.0 - t) + b * t; };
+    auto mapToGradient = [&](uint8_t v) {
+        double t = static_cast<double>(v) / 255.0;
+        // gradient stops: 0.0 = black, 0.33 = red, 0.66 = yellow, 1.0 = white
+        glm::vec3 c0(0.0f, 0.0f, 0.0f); // black
+        glm::vec3 c1(1.0f, 0.0f, 0.0f); // red
+        glm::vec3 c2(1.0f, 1.0f, 0.0f); // yellow
+        glm::vec3 c3(1.0f, 1.0f, 1.0f); // white
+
+        glm::vec3 col;
+        if (t < 0.33)
+        {
+            double localT = t / 0.33;
+            col = glm::vec3(lerp(c0.r, c1.r, localT), lerp(c0.g, c1.g, localT), lerp(c0.b, c1.b, localT));
+        }
+        else if (t < 0.66)
+        {
+            double localT = (t - 0.33) / 0.33;
+            col = glm::vec3(lerp(c1.r, c2.r, localT), lerp(c1.g, c2.g, localT), lerp(c1.b, c2.b, localT));
+        }
+        else
+        {
+            double localT = (t - 0.66) / 0.34;
+            col = glm::vec3(lerp(c2.r, c3.r, localT), lerp(c2.g, c3.g, localT), lerp(c2.b, c3.b, localT));
+        }
+        return glm::u8vec3(static_cast<uint8_t>(glm::clamp(col.r, 0.0f, 1.0f) * 255.0f),
+                           static_cast<uint8_t>(glm::clamp(col.g, 0.0f, 1.0f) * 255.0f),
+                           static_cast<uint8_t>(glm::clamp(col.b, 0.0f, 1.0f) * 255.0f));
+    };
+
+    for (unsigned int j = 0; j < height; ++j)
+    {
+        for (unsigned int i = 0; i < width; ++i)
+        {
+            uint8_t g = greyPixels[j * width + i];
+            glm::u8vec3 c = mapToGradient(g);
+            int idx = (j * width + i) * 3;
+            gradPixels[idx + 0] = c.r;
+            gradPixels[idx + 1] = c.g;
+            gradPixels[idx + 2] = c.b;
+        }
+    }
+
+    std::string gradPath = saveFilePath + "_grad_" + std::to_string(seed) + ".jpg";
+    stbi_write_jpg(gradPath.c_str(), width, height, 3, gradPixels.data(), 100);
+
+    // Create an animated sprite sheet (columns x rows frames)
+    const int columns = 4;
+    const int rows = 4;
+    const int frames = columns * rows;
+    int sheetW = static_cast<int>(width) * columns;
+    int sheetH = static_cast<int>(height) * rows;
+    std::vector<uint8_t> sheetPixels(sheetW * sheetH * 3);
+
+    for (int f = 0; f < frames; ++f)
+    {
+        int tileX = f % columns;
+        int tileY = f / columns;
+        // small phase offset per frame for looping effect
+        double phase = static_cast<double>(f) / static_cast<double>(frames) * 6.283185307179586;
+        for (int j = 0; j < static_cast<int>(height); ++j)
+        {
+            for (int i = 0; i < static_cast<int>(width); ++i)
+            {
+                double sample = TotalNoisePerPoint(i + static_cast<int>(phase * 10.0), j + f * 7);
+                double mapped = (sample + 1.0) * 0.5 * 255.0;
+                mapped = glm::clamp(mapped, 0.0, 255.0);
+                uint8_t gv = static_cast<uint8_t>(mapped);
+                glm::u8vec3 c = mapToGradient(gv);
+
+                int sx = tileX * static_cast<int>(width) + i;
+                int sy = tileY * static_cast<int>(height) + j;
+                int sidx = (sy * sheetW + sx) * 3;
+                sheetPixels[sidx + 0] = c.r;
+                sheetPixels[sidx + 1] = c.g;
+                sheetPixels[sidx + 2] = c.b;
+            }
+        }
+    }
+
+    std::string animPath = saveFilePath + "_anim_" + std::to_string(seed) + ".jpg";
+    stbi_write_jpg(animPath.c_str(), sheetW, sheetH, 3, sheetPixels.data(), 100);
 }
