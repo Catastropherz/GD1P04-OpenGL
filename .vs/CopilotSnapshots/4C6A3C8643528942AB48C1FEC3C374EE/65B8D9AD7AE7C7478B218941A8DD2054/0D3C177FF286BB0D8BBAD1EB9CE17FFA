@@ -1,4 +1,0 @@
-﻿# 01-investigate-runtime: Investigate Project Runtime Library
-
-- Read .vcxproj file to confirm RuntimeLibrary settings and linked library list.
-- Output: tasks/01-investigate-runtime/task.md (investigation notes)
