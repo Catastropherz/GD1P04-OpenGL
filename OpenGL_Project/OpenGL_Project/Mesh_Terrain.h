@@ -48,53 +48,6 @@ public:
     void Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat, Camera* _camera);
     void Render();
 
-    // Debug helpers
-    void DumpDebug(unsigned int vertexCount, unsigned int indexCount)
-    {
-        unsigned int vc = (vertexCount < Vertices.size()) ? vertexCount : (unsigned int)Vertices.size();
-        unsigned int ic = (indexCount < Indices.size()) ? indexCount : (unsigned int)Indices.size();
-
-        std::cout << "Mesh_Terrain Debug Dump:\n";
-        std::cout << "Total Vertices: " << Vertices.size() << "  Total Indices: " << Indices.size() << "\n";
-
-        std::cout << "Vertices (first " << vc << "):\n";
-        for (unsigned int i = 0; i < vc; ++i)
-        {
-            const VertexStandard& v = Vertices[i];
-            std::cout << "[" << i << "] pos=(" << v.position.x << ", " << v.position.y << ", " << v.position.z << ")"
-                << " tex=(" << v.texcoord.x << ", " << v.texcoord.y << ")"
-                << " normal=(" << v.normal.x << ", " << v.normal.y << ", " << v.normal.z << ")\n";
-        }
-
-        std::cout << "Indices (first " << ic << "):\n";
-        if (ic == 0)
-        {
-            std::cout << "(none)\n";
-            return;
-        }
-
-        // Print indices as triangles where possible
-        unsigned int printed = 0;
-        for (unsigned int i = 0; i < ic; i += 3)
-        {
-            if (i + 2 < ic)
-            {
-                std::cout << "tri " << (i / 3) << ": " << Indices[i] << ", " << Indices[i + 1] << ", " << Indices[i + 2] << "\n";
-                printed += 3;
-            }
-            else
-            {
-                // print remaining indices
-                for (unsigned int j = i; j < ic; ++j)
-                {
-                    std::cout << Indices[j] << ((j + 1 < ic) ? ", " : "\n");
-                    printed++;
-                }
-            }
-            if (printed >= ic) break;
-        }
-    }
-
 private:
     std::vector<float> HeightMap;
     std::vector<VertexStandard> Vertices;

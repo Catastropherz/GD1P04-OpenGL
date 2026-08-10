@@ -141,15 +141,14 @@ int main()
 	// Create terrain
 	HeightMapInfo info;
 	info.FilePath = "Resources/Heightmaps/Heightmap0.raw";
-	info.Width = 128;
-	info.Depth = 128;
+	info.Width = 512;
+	info.Depth = 512;
 	info.CellSpacing = 1.0f;
 
 
 	Mesh_Terrain terrain;
 	terrain.LoadHeightMap(info);
-    // Skipping smoothing step to test raw heightmap result
-	// terrain.SmoothHeights(info);
+	terrain.SmoothHeights(info);
 	terrain.BuildVertexData(info);
 	terrain.GenerateNormals(info);
 	terrain.BuildIndexData(info);
@@ -249,7 +248,6 @@ void Render(Camera* _camera, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _mes
 	if (_terrain != nullptr)
 	{
 		_terrain->Render();
-		_terrain->DumpDebug(16, 48);
 	}
 
 	//// Render mesh objects
