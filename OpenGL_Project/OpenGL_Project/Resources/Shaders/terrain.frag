@@ -10,10 +10,16 @@ uniform sampler2D TextureDirt;  // Texture Unit 1
 uniform sampler2D TextureStone; // Texture Unit 2
 uniform sampler2D TextureSnow;  // Texture Unit 3
 
-// Lighting Uniforms
-uniform vec3 LightDir   = normalize(vec3(0.5, -1.0, 0.3));
-uniform vec3 LightColor = vec3(1.0, 1.0, 1.0);
-uniform float Ambient   = 0.2f;
+// Lighting Uniforms (provided by LightManager)
+uniform float AmbientStrength;
+uniform vec3 AmbientColor;
+
+struct DirectionalLight {
+    vec3 Direction;
+    vec3 Color;
+    float SpecularStrength;
+};
+uniform DirectionalLight Directional;
 
 out vec4 FinalColor;
 
@@ -37,10 +43,11 @@ void main()
     blendedColor      = mix(blendedColor, texStone, stoneWeight);
     blendedColor      = mix(blendedColor, texSnow,  snowWeight);
 
-    // Directional Diffuse + Ambient Lighting
+    // Directional Diffuse + Ambient Lighting (use LightManager uniforms)
     vec3 norm = normalize(FragNormal);
-    float diff = max(dot(norm, -LightDir), 0.0);
-    vec3 lighting = (Ambient + diff) * LightColor;
+    vec3 lightDir = normalize(Directional.Direction);
+    float diff = max(dot(norm, -lightDir), 0.0);
+    vec3 lighting = (AmbientStrength * AmbientColor) + diff * Directional.Color;
 
     FinalColor = vec4(lighting, 1.0) * blendedColor;
 }

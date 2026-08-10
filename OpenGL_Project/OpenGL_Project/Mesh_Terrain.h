@@ -18,7 +18,6 @@ struct HeightMapInfo
     unsigned int Width = 0;   // Number of samples along X (row count)
     unsigned int Depth = 0;   // Number of samples along Z (column count)
     float CellSpacing = 1.0f; // Unit translation spacing
-    float HeightScale = 1.0f; // Multiplier to scale raw heightmap values when building vertices
 };
 
 class Mesh_Terrain

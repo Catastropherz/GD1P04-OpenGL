@@ -144,11 +144,12 @@ int main()
 	info.Width = 128;
 	info.Depth = 128;
 	info.CellSpacing = 1.0f;
-	info.HeightScale = 1.0f;
+
 
 	Mesh_Terrain terrain;
 	terrain.LoadHeightMap(info);
-	terrain.SmoothHeights(info);
+    // Skipping smoothing step to test raw heightmap result
+	// terrain.SmoothHeights(info);
 	terrain.BuildVertexData(info);
 	terrain.GenerateNormals(info);
 	terrain.BuildIndexData(info);

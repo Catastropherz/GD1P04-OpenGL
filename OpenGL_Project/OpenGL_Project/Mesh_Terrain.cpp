@@ -108,17 +108,17 @@ void Mesh_Terrain::BuildVertexData(const HeightMapInfo& BuildInfo)
     float TexU = 1.0f / (float)(BuildInfo.Width - 1);
     float TexV = 1.0f / (float)(BuildInfo.Depth - 1);
 
-    // Rows iterate over Depth, Columns iterate over Width
-    for (unsigned int Row = 0; Row < BuildInfo.Depth; Row++)
+    for (unsigned int Row = 0; Row < BuildInfo.Width; Row++)
     {
         float PosZ = HalfDepth - (Row * BuildInfo.CellSpacing);
 
-        for (unsigned int Col = 0; Col < BuildInfo.Width; Col++)
+        for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
         {
             int Index = Row * BuildInfo.Width + Col;
+            //int Index = Row * BuildInfo.Depth + Col;
+
             float PosX = -HalfWidth + (Col * BuildInfo.CellSpacing);
-            // Apply height scale to control vertical exaggeration
-            float PosY = HeightMap[Index] * BuildInfo.HeightScale;
+            float PosY = HeightMap[Index];
 
             Vertices[Index].position = glm::vec3(PosX, PosY, PosZ);
             Vertices[Index].texcoord = glm::vec2(Col * TexU, Row * TexV);
@@ -130,36 +130,30 @@ void Mesh_Terrain::BuildVertexData(const HeightMapInfo& BuildInfo)
 
 void Mesh_Terrain::GenerateNormals(const HeightMapInfo& BuildInfo)
 {
-    float InvCellSpacing = 1.0f / (2.0f * BuildInfo.CellSpacing);
-
+    // Compute normals from surrounding vertex positions so normals always match geometry
     for (unsigned int Row = 0; Row < BuildInfo.Width; Row++)
     {
         for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
         {
-            float RowNeg = HeightMap[(Row == 0 ? Row : Row - 1) * BuildInfo.Depth + Col];
-            float RowPos = HeightMap[(Row < BuildInfo.Width - 1 ? Row + 1 : Row) * BuildInfo.Depth + Col];
-            float ColNeg = HeightMap[Row * BuildInfo.Depth + (Col == 0 ? Col : Col - 1)];
-            float ColPos = HeightMap[Row * BuildInfo.Depth + (Col < BuildInfo.Depth - 1 ? Col +1 : Col)];
+            unsigned int idx = Row * BuildInfo.Depth + Col;
+            glm::vec3 pos = Vertices[idx].position;
 
-            float X = (RowNeg - RowPos);
-            if (Row == 0 || Row == BuildInfo.Width - 1) 
-            {
-                X *= 2.0f;
-            }
+            // sample neighbor positions (mirror edges)
+            glm::vec3 left  = (Row > 0) ? Vertices[(Row - 1) * BuildInfo.Depth + Col].position : pos + glm::vec3(-BuildInfo.CellSpacing, 0.0f, 0.0f);
+            glm::vec3 right = (Row + 1 < BuildInfo.Width) ? Vertices[(Row + 1) * BuildInfo.Depth + Col].position : pos + glm::vec3(BuildInfo.CellSpacing, 0.0f, 0.0f);
+            glm::vec3 down  = (Col > 0) ? Vertices[Row * BuildInfo.Depth + (Col - 1)].position : pos + glm::vec3(0.0f, 0.0f, -BuildInfo.CellSpacing);
+            glm::vec3 up    = (Col + 1 < BuildInfo.Depth) ? Vertices[Row * BuildInfo.Depth + (Col + 1)].position : pos + glm::vec3(0.0f, 0.0f, BuildInfo.CellSpacing);
 
-            float Y = (ColPos - ColNeg);
-            if (Col == 0 || Col == BuildInfo.Depth - 1) 
-            {
-                Y *= 2.0f;
-            }
+            glm::vec3 tangentX = right - left; // direction along X
+            glm::vec3 tangentZ = up - down;    // direction along Z
 
-            glm::vec3 TangentZ(0.0f, X * InvCellSpacing, 1.0f);
-            glm::vec3 TangentX(1.0f, Y * InvCellSpacing, 0.0f);
+            glm::vec3 normal = glm::cross(tangentZ, tangentX);
+            if (glm::length(normal) > 1e-6f)
+                normal = glm::normalize(normal);
+            else
+                normal = glm::vec3(0.0f, 1.0f, 0.0f);
 
-            glm::vec3 Normal = glm::cross(TangentZ, TangentX);
-            Normal = glm::normalize(Normal);
-
-            Vertices[Row * BuildInfo.Depth + Col].normal = Normal;
+            Vertices[idx].normal = normal;
         }
     }
 }
@@ -175,20 +169,13 @@ void Mesh_Terrain::BuildIndexData(const HeightMapInfo& BuildInfo)
     {
         for (unsigned int Col = 0; Col < (BuildInfo.Depth - 1); Col++)
         {
-            unsigned int v0 = Row * BuildInfo.Depth + Col;
-            unsigned int v1 = Row * BuildInfo.Depth + (Col + 1);
-            unsigned int v2 = (Row + 1) * BuildInfo.Depth + Col;
-            unsigned int v3 = (Row + 1) * BuildInfo.Depth + (Col + 1);
+            Indices[Index++] = Row * BuildInfo.Depth + Col;
+            Indices[Index++] = Row * BuildInfo.Depth + Col + 1;
+            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col;
 
-            // Triangle 1: v0, v1, v2
-            Indices[Index++] = v0;
-            Indices[Index++] = v1;
-            Indices[Index++] = v2;
-
-            // Triangle 2: v2, v1, v3
-            Indices[Index++] = v2;
-            Indices[Index++] = v1;
-            Indices[Index++] = v3;
+            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col;
+            Indices[Index++] = Row * BuildInfo.Depth + Col + 1;
+            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col + 1;
         }
     }
 }
@@ -212,15 +199,15 @@ void Mesh_Terrain::SetupMesh()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(GLuint), Indices.data(), GL_STATIC_DRAW);
 
     // Position -> location 0, TexCoord -> location 1, Normal -> location 2
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, position));
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, position));
-
+    
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, texcoord));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, texcoord));
-
+    
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (GLvoid*)offsetof(VertexStandard, normal));
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, normal));
-
     // Unbind VAO
     glBindVertexArray(0);
 }
