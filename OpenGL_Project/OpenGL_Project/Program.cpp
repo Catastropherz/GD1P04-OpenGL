@@ -16,6 +16,8 @@ Program::Program()
                                                                 "Resources/Shaders/Lighting_Reflect.frag");
     Program_TextureUI = ShaderLoader::CreateProgram("Resources/Shaders/TextureUI.vert",
                                                     "Resources/Shaders/Texture.frag");
+	Program_TextureTerrain = ShaderLoader::CreateProgram("Resources/Shaders/terrain.vert",
+		                                                "Resources/Shaders/terrain.frag");
 }
 
 Program::~Program()

@@ -31,6 +31,7 @@ public:
 	GLuint Program_TexReflect = 0;
 	GLuint Program_TexReflectInstanced = 0;
 	GLuint Program_TextureUI = 0;
+	GLuint Program_TextureTerrain = 0;
 
     Program();
     ~Program();

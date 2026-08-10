@@ -1,0 +1,263 @@
+﻿#include "Mesh_Terrain.h"
+
+Mesh_Terrain::~Mesh_Terrain()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+}
+
+bool Mesh_Terrain::LoadHeightMap(const HeightMapInfo& BuildInfo)
+{
+    unsigned int VertexCount = BuildInfo.Width * BuildInfo.Depth;
+    std::vector<unsigned char> HeightValue(VertexCount);
+
+    std::ifstream File;
+    File.open(BuildInfo.FilePath, std::ios_base::binary);
+    if (File)
+    {
+        File.read((char*)&HeightValue[0], (std::streamsize)HeightValue.size());
+        File.close();
+    }
+    else
+    {
+        std::cout << "Error: Height map failed to load: " << BuildInfo.FilePath << std::endl;
+        return false;
+    }
+
+    // Transfer raw byte data into float array for expanded height manipulation
+    HeightMap.resize(VertexCount, 0.0f);
+    for (unsigned int i = 0; i < VertexCount; i++)
+    {
+        HeightMap[i] = (float)HeightValue[i];
+    }
+
+    return true;
+}
+
+float Mesh_Terrain::Average(unsigned int Row, unsigned int Col, const HeightMapInfo& BuildInfo)
+{
+    float totalHeight = 0.0f;
+    int count = 0;
+
+    // Check 3x3 surrounding grid
+    for (int r = -1; r <= 1; ++r)
+    {
+        for (int c = -1; c <= 1; ++c)
+        {
+            int evalRow = (int)Row + r;
+            int evalCol = (int)Col + c;
+
+            // Bounds check
+            if (evalRow >= 0 && evalRow < (int)BuildInfo.Width &&
+                evalCol >= 0 && evalCol < (int)BuildInfo.Depth)
+            {
+                totalHeight += HeightMap[evalRow * BuildInfo.Depth + evalCol];
+                count++;
+            }
+        }
+    }
+
+    return (count > 0) ? (totalHeight / (float)count) : 0.0f;
+}
+
+void Mesh_Terrain::SmoothHeights(const HeightMapInfo& BuildInfo)
+{
+    std::vector<float> SmoothedMap(HeightMap.size());
+
+    for (unsigned int Row = 0; Row < BuildInfo.Width; Row++)
+    {
+        for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
+        {
+            SmoothedMap[Row * BuildInfo.Depth + Col] = Average(Row, Col, BuildInfo);
+        }
+    }
+
+    HeightMap = SmoothedMap;
+}
+
+void Mesh_Terrain::BuildVertexData(const HeightMapInfo& BuildInfo)
+{
+    unsigned int VertexCount = BuildInfo.Width * BuildInfo.Depth;
+    Vertices.resize(VertexCount);
+
+    float HalfWidth = (BuildInfo.Width - 1) * BuildInfo.CellSpacing * 0.5f;
+    float HalfDepth = (BuildInfo.Depth - 1) * BuildInfo.CellSpacing * 0.5f;
+
+    float TexU = 1.0f / (float)(BuildInfo.Width - 1);
+    float TexV = 1.0f / (float)(BuildInfo.Depth - 1);
+
+    for (unsigned int Row = 0; Row < BuildInfo.Width; Row++)
+    {
+        float PosZ = HalfDepth - (Row * BuildInfo.CellSpacing);
+
+        for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
+        {
+            int Index = Row * BuildInfo.Width + Col;
+            float PosX = -HalfWidth + (Col * BuildInfo.CellSpacing);
+            float PosY = HeightMap[Index];
+
+            Vertices[Index].position = glm::vec3(PosX, PosY, PosZ);
+            Vertices[Index].texcoord = glm::vec2(Col * TexU, Row * TexV);
+            Vertices[Index].normal = glm::vec3(0.0f, 1.0f, 0.0f);
+        }
+    }
+}
+
+void Mesh_Terrain::GenerateNormals(const HeightMapInfo& BuildInfo)
+{
+    float InvCellSpacing = 1.0f / (2.0f * BuildInfo.CellSpacing);
+
+    for (unsigned int Row = 0; Row < BuildInfo.Width; Row++)
+    {
+        for (unsigned int Col = 0; Col < BuildInfo.Depth; Col++)
+        {
+            float RowNeg = HeightMap[(Row == 0 ? Row : Row - 1) * BuildInfo.Depth + Col];
+            float RowPos = HeightMap[(Row == BuildInfo.Width - 1 ? Row : Row + 1) * BuildInfo.Depth + Col];
+            float ColNeg = HeightMap[Row * BuildInfo.Depth + (Col == 0 ? Col : Col - 1)];
+            float ColPos = HeightMap[Row * BuildInfo.Depth + (Col == BuildInfo.Depth - 1 ? Col : Col + 1)];
+
+            float dY_dX = (RowNeg - RowPos);
+            if (Row == 0 || Row == BuildInfo.Width - 1) {
+                dY_dX *= 2.0f;
+            }
+
+            float dY_dZ = (ColPos - ColNeg);
+            if (Col == 0 || Col == BuildInfo.Depth - 1) {
+                dY_dZ *= 2.0f;
+            }
+
+            glm::vec3 TangentZ(0.0f, dY_dZ * InvCellSpacing, 1.0f);
+            glm::vec3 TangentX(1.0f, dY_dX * InvCellSpacing, 0.0f);
+
+            glm::vec3 Normal = glm::cross(TangentZ, TangentX);
+            Normal = glm::normalize(Normal);
+
+            Vertices[Row * BuildInfo.Depth + Col].normal = Normal;
+        }
+    }
+}
+
+void Mesh_Terrain::BuildIndexData(const HeightMapInfo& BuildInfo)
+{
+    unsigned int FaceCount = (BuildInfo.Width - 1) * (BuildInfo.Depth - 1) * 2;
+    unsigned int DrawCount = FaceCount * 3;
+    Indices.resize(DrawCount);
+
+    int Index = 0;
+    for (unsigned int Row = 0; Row < (BuildInfo.Width - 1); Row++)
+    {
+        for (unsigned int Col = 0; Col < (BuildInfo.Depth - 1); Col++)
+        {
+            // Triangle 1
+            Indices[Index++] = Row * BuildInfo.Depth + Col;
+            Indices[Index++] = Row * BuildInfo.Depth + Col + 1;
+            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col;
+
+            // Triangle 2
+            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col;
+            Indices[Index++] = Row * BuildInfo.Depth + Col + 1;
+            Indices[Index++] = (Row + 1) * BuildInfo.Depth + Col + 1;
+        }
+    }
+}
+
+void Mesh_Terrain::SetupMesh()
+{
+    // Generate buffers
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    // Bind VAO
+    glBindVertexArray(VAO);
+
+    // Upload Vertex Data to VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(VertexStandard), Vertices.data(), GL_STATIC_DRAW);
+
+    // Upload Index Data to EBO
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(GLuint), Indices.data(), GL_STATIC_DRAW);
+
+    // Position Attribute (location = 0)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, position));
+
+    // TexCoord Attribute (location = 2)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, texcoord));
+
+    // Normal Attribute (location = 3)
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, normal));
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+void Mesh_Terrain::setModel(glm::vec3 _position, glm::vec3 _scale, float _angleDegrees)
+{
+    Position = _position;
+    Scale = _scale;
+    RotationAngle = _angleDegrees;
+
+    glm::mat4 TranslationMat = glm::translate(glm::mat4(1.0f), Position);
+    glm::mat4 RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
+
+    ModelMat = TranslationMat * RotationMat * ScaleMat;
+}
+
+void Mesh_Terrain::Update(float _currentTime, glm::mat4 _viewMat, glm::mat4 _projectionMat, Camera* _camera)
+{
+    currentTime = _currentTime;
+    viewMatrix = _viewMat;
+    projectionMatrix = _projectionMat;
+    if (_camera != nullptr)
+    {
+        cameraPosition = _camera->GetCameraPosition();
+    }
+}
+
+void Mesh_Terrain::Render()
+{
+    if (programToUse == 0) return;
+
+    glUseProgram(programToUse);
+    glBindVertexArray(VAO);
+
+    // Pass Matrices and Camera to Shaders
+    glUniformMatrix4fv(glGetUniformLocation(programToUse, "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+    glUniformMatrix4fv(glGetUniformLocation(programToUse, "ViewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(programToUse, "ProjectionMat"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    glUniform3fv(glGetUniformLocation(programToUse, "CameraPos"), 1, glm::value_ptr(cameraPosition));
+    glUniform1f(glGetUniformLocation(programToUse, "CurrentTime"), currentTime);
+
+    // Apply Lights
+    if (lightManager != nullptr)
+    {
+        lightManager->applyLightsToShader(programToUse);
+    }
+
+    // Bind Textures
+    if (texture != nullptr)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetTextureID());
+        glUniform1i(glGetUniformLocation(programToUse, "Texture0"), 0);
+    }
+
+    if (secondTexture != nullptr)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, secondTexture->GetTextureID());
+        glUniform1i(glGetUniformLocation(programToUse, "Texture1"), 1);
+    }
+
+    // Draw Terrain
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(Indices.size()), GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+    glUseProgram(0);
+}

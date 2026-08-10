@@ -1,0 +1,15 @@
+﻿# 03.01-investigate-thirdparty-libs: Inspect third-party GLFW/GLEW binaries for CRT linkage
+
+## 03.01-investigate-thirdparty-libs: Inspect third-party binaries
+
+Objective:
+- Locate prebuilt GLFW/GLEW binaries in the repo or project dependencies and determine their CRT linkage (static vs dynamic).
+
+Steps:
+1. Search repository for any prebuilt .lib/.a/.dll for GLFW or GLEW and list their paths.
+2. If binaries are not present in repo, inspect project AdditionalLibraryDirectories or documented dependency locations and report where the build picks them up.
+3. Recommend actions: obtain DLL-import libs built with /MDd (/MD) or rebuild third-party libs with matching RuntimeLibrary, or as last resort use /NODEFAULTLIB for MSVCRT and document risks.
+
+Done-when:
+- A list of discovered third-party binaries (paths) or confirmation they are not present in repo.
+- Recommendation for how to obtain or rebuild matching binaries.

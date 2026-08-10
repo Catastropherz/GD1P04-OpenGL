@@ -11,16 +11,17 @@
  Mail : sivakorn.tuangwilai@mds.ac.nz
  **************************************************************************/
 
-#include "Mesh.h"
+#pragma once
+#include "Mesh_Terrain.h"
 
 
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
-void Render(Camera* _camera, SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount,
+void Render(Camera* _camera, SkyBox* _skybox , Mesh_Terrain* _terrain, Mesh* _meshArray[], int _meshCount,
 	Mesh* _UIArray[] = nullptr, int _UICount = 0);
 void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, float* _previousTime, float* _deltaTime, 
-	Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[] = nullptr, int _UICount = 0);
+	Mesh_Terrain* _terrain, Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[] = nullptr, int _UICount = 0);
 void ProcessInput(float _deltaTime, Camera* _camera, Mesh* _meshToMove);
 void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods);
 void TextInput(GLFWwindow* _window, unsigned int _codePoint);
@@ -66,6 +67,9 @@ TextureLoader texture1;
 TextureLoader textureButtonRed;
 TextureLoader textureButtonGreen;
 TextureLoader textureGround;
+TextureLoader textureGrass;
+TextureLoader textureSnow;
+TextureLoader textureStone;
 
 //--------------------------------------------------
 
@@ -134,6 +138,29 @@ int main()
 	lightManager.setAttenuationForPointLight(1, 1.0f, 0.04f, 0.0075f);
 	lightManager.setDirectionalLight(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.3f, 0.3f, 0.3f), 0.5f);
 
+	// Create terrain
+	HeightMapInfo info;
+	info.FilePath = "Resources/Heightmaps/Heightmap0.raw";
+	info.Width = 128;
+	info.Depth = 128;
+	info.CellSpacing = 1.0f;
+
+	Mesh_Terrain terrain;
+	terrain.LoadHeightMap(info);
+	terrain.SmoothHeights(info);
+	terrain.BuildVertexData(info);
+	terrain.GenerateNormals(info);
+	terrain.BuildIndexData(info);
+	terrain.SetupMesh();
+
+	// Attach Shader Program, Textures, and Lights
+	terrain.setProgram(&program.Program_TextureTerrain);
+	terrain.setTexture1(&textureGrass);
+	terrain.setTexture2(&textureGround);
+	terrain.setTexture3(&textureStone);
+	terrain.setTexture4(&textureSnow);
+	terrain.SetLightManager(&lightManager);
+	terrain.setModel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Create mesh objects
 	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
@@ -183,7 +210,7 @@ int main()
 	button = &meshButton;
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshBarrel, &meshTree, &meshRedLightCube, &meshGreenLightCube, &meshGround };
+	Mesh* meshArray[] = { &meshGround };
 	Mesh* UIArray[] = { &meshButton };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 	int UICount = sizeof(UIArray) / sizeof(UIArray[0]);
@@ -194,10 +221,10 @@ int main()
 	while (glfwWindowShouldClose(Window) == false)
 	{
 		// Update all objects and run the processes
-		Update(&camera, &lightManager, &CurrentTime, &PreviousTime, &DeltaTime, meshArray, meshCount, UIArray, UICount);
+		Update(&camera, &lightManager, &CurrentTime, &PreviousTime, &DeltaTime, &terrain, meshArray, meshCount, UIArray, UICount);
 
 		// Render all objects
-		Render(&camera, &skybox ,meshArray, meshCount, UIArray, UICount);
+		Render(&camera, &skybox, &terrain ,meshArray, meshCount, UIArray, UICount);
 	}
 	// End of Main Loop ****************************************
 
@@ -208,22 +235,28 @@ int main()
 }
 
 // Render function to render all objects
-void Render(Camera* _camera, SkyBox* _skybox ,Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
+void Render(Camera* _camera, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
 {
 	// Clear buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Render skybox first
-	//_skybox->RenderSkybox(); // Uncomment to see skybox
+	_skybox->RenderSkybox(); // Uncomment to see skybox
 
-	// Render mesh objects
-	if (_meshArray != nullptr)
+	// Render Terrain
+	if (_terrain != nullptr)
 	{
-		for (int i = 0; i < _meshCount; ++i)
-		{
-			_meshArray[i]->Render();
-		}
+		_terrain->Render();
 	}
+
+	//// Render mesh objects
+	//if (_meshArray != nullptr)
+	//{
+	//	for (int i = 0; i < _meshCount; ++i)
+	//	{
+	//		_meshArray[i]->Render();
+	//	}
+	//}
 
 	// Render UI --------
 	// Temporarily Disable Depth Testing
@@ -271,8 +304,9 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	glDepthFunc(GL_LESS);
 
 	// Face Culling
+	//glDisable(GL_CULL_FACE);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK); // Default is back face culling
+	//glCullFace(GL_BACK); // Default is back face culling
 	glFrontFace(GL_CCW); // Default is counter-clockwise winding order to be considered front-facing
 
 	// Wireframe mode
@@ -293,6 +327,9 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 	textureButtonRed.LoadTexture("Resources/Textures/Red.png");
 	textureButtonGreen.LoadTexture("Resources/Textures/Green.png");
 	textureGround.LoadTexture("Resources/Textures/Ground.png");
+	textureGrass.LoadTexture("Resources/Textures/Green.png");
+	textureStone.LoadTexture("Resources/Textures/Stone.png");
+	textureSnow.LoadTexture("Resources/Textures/Snow.png");
 
 		
 	// Enable blending
@@ -301,7 +338,7 @@ void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight)
 }
 
 // Update function to update all objects
-void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, float* _previousTime, float* _deltaTime,
+void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, float* _previousTime, float* _deltaTime, Mesh_Terrain* _terrain,
 	Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
 {
 	// Check for any events like key presses or mouse movements
@@ -336,6 +373,9 @@ void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, f
 		// Wireframe mode
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
+
+	// Update terrain
+	_terrain->Update(*_currentTime, _camera->GetViewMatrix(), _camera->GetProjectionMatrix(), _camera);
 
 	// Update object components
 	if (_meshArray != nullptr)

@@ -1,0 +1,20 @@
+﻿# 03.01-investigate-thirdparty-libs: Inspect third-party GLFW/GLEW binaries for CRT linkage
+
+## 03.01-investigate-thirdparty-libs: Inspect third-party binaries
+
+Objective:
+- Locate prebuilt GLFW/GLEW binaries in the repo or project dependencies and determine their CRT linkage (static vs dynamic).
+
+Research Findings:
+
+- Repository search: No prebuilt .lib/.dll for glfw or glew found in the repository. The Dependencies folders contain headers only (e.g., Dependencies/GLFW/glfw3.h, Dependencies/GLEW/glew.h).
+- The .vcxproj references glfw3.lib and glew32.lib in AdditionalDependencies; however the corresponding .lib files are not present in the repo tree. This implies the build resolves those libs from the developer machine's library paths (local installs) or external SDKs.
+- Because no binaries are present in the repo, I cannot determine their CRT linkage from repository artifacts. You must inspect the actual `.lib` files on the machine used for the build to confirm whether they were built with /MT or /MD.
+
+Recommendations:
+- Locate the glfw3.lib and glew32.lib files used by the linker on your machine (search the AdditionalLibraryDirectories paths or global library locations).
+- Use `dumpbin /headers <path\to\glfw3.lib>` to inspect which CRT they reference, or prefer obtaining DLL-distribution import libs built against the DLL CRT (/MD). If they are static /MT builds, either obtain /MD builds or rebuild the libraries from source with RuntimeLibrary set to /MDd (Debug) and /MD (Release).
+- After obtaining matching third-party libs, rerun a full rebuild to verify LNK4098 is resolved.
+
+Done-when:
+- The .lib locations are identified or a plan to replace/rebuild them is agreed.
