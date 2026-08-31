@@ -157,6 +157,7 @@
     <None Include="Resources\Shaders\Particle.vert" />
     <None Include="Resources\Shaders\PointLight.frag" />
     <None Include="Resources\Shaders\PostProcess.frag" />
+    <None Include="Resources\Shaders\ScreenQuad.vert" />
     <None Include="Resources\Shaders\Skybox.frag" />
     <None Include="Resources\Shaders\Skybox.vert" />
     <None Include="Resources\Shaders\terrain.frag" />
@@ -165,7 +166,6 @@
     <None Include="Resources\Shaders\Texture.vert" />
     <None Include="Resources\Shaders\TextureInstanced.vert" />
     <None Include="Resources\Shaders\TextureUI.vert" />
-    <None Include="ScreenQuad.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />

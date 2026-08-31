@@ -92,9 +92,6 @@
     <None Include="Resources\Shaders\terrain.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="ScreenQuad.vert">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
     <None Include="Resources\Shaders\PostProcess.frag">
       <Filter>Resource Files\Shaders</Filter>
     </None>
@@ -105,6 +102,9 @@
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="Resources\Shaders\Particle.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\ScreenQuad.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>

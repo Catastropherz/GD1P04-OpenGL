@@ -3,7 +3,7 @@
 
 ScreenQuad::ScreenQuad()
 {
-    // Fullscreen NDC Quad vertices (Positions + TexCoords)
+    // Fullscreen Quad vertices (Positions + TexCoords)
     float quadVertices[] = {
         // Positions   // TexCoords
         -1.0f,  1.0f,  0.0f, 1.0f,
