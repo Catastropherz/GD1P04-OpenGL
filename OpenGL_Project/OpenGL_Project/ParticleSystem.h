@@ -30,8 +30,8 @@ private:
 
     // Buffer layout dimensions
     int WorkGroupSizeX = 128;
-    int ParticlesPerFirework = 2048; // Total particles per firework
-    int MaxFireworks = 8;             // Allow up to 8 fireworks total
+    int ParticlesPerFirework = 102400; // Total particles per firework
+    int MaxFireworks = 4;
     int NumParticles = 0;
 
     std::vector<FireworkInstance> Fireworks;
