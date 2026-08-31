@@ -5,8 +5,17 @@
 #include <gtc/type_ptr.hpp>
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 
 #include "Camera.h"
+
+struct FireworkInstance
+{
+    glm::vec3 Origin;
+    glm::vec3 Color;
+    float TrailTime; // Time spent moving upwards before exploding
+    bool Active = false;
+};
 
 class ParticleSystem
 {
@@ -19,17 +28,19 @@ private:
     GLuint VBO_PositionLife = 0;
     GLuint VBO_Velocity = 0;
 
-    glm::vec3 EmitterOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec4 VelocityLifeChange = glm::vec4(0.0f);
-
-    int GroupCountX = 1000;
+    // Buffer layout dimensions
     int WorkGroupSizeX = 128;
+    int ParticlesPerFirework = 2048; // Total particles per firework
+    int MaxFireworks = 8;             // Allow up to 8 fireworks total
     int NumParticles = 0;
 
+    std::vector<FireworkInstance> Fireworks;
+
 public:
-    ParticleSystem(Camera* cam, GLuint programRender, GLuint programCompute, glm::vec3 origin);
+    ParticleSystem(Camera* cam, GLuint programRender, GLuint programCompute);
     ~ParticleSystem();
 
+    void SpawnFireworks(int count = 4);
     void Update(float deltaTime);
     void Render();
 };

@@ -1,14 +1,14 @@
 #version 460 core
 
-layout (location = 0) in vec4 Position; // xyz: Position, w: Remaining Life
+layout (location = 0) in vec4 Position; // xyz: Pos, w: Life
 
-uniform mat4 VP; // View-Projection Matrix
+uniform mat4 VP;
 
 out float FragLife;
 
 void main()
 {
-    FragLife = Position.w; // Pass remaining life to fragment shader for fading
-    gl_PointSize = 3.0f;    // Set particle point rendering size
+    FragLife = Position.w;
+    gl_PointSize = (Position.w > 0.0f) ? 4.0f : 0.0f; // Hide dead particles
     gl_Position = VP * vec4(Position.xyz, 1.0f);
 }

@@ -150,11 +150,11 @@
     <ClCompile Include="TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ComputeParticles.comp" />
-    <None Include="Particle.frag" />
-    <None Include="Particle.vert" />
+    <None Include="Resources\Shaders\ComputeParticles.comp" />
     <None Include="Resources\Shaders\Lighting_BlinnPhong.frag" />
     <None Include="Resources\Shaders\Lighting_Reflect.frag" />
+    <None Include="Resources\Shaders\Particle.frag" />
+    <None Include="Resources\Shaders\Particle.vert" />
     <None Include="Resources\Shaders\PointLight.frag" />
     <None Include="Resources\Shaders\PostProcess.frag" />
     <None Include="Resources\Shaders\Skybox.frag" />

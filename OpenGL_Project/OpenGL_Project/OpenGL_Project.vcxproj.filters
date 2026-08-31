@@ -95,16 +95,16 @@
     <None Include="ScreenQuad.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="ComputeParticles.comp">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Particle.vert">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Particle.frag">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
     <None Include="Resources\Shaders\PostProcess.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\ComputeParticles.comp">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\Particle.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\Particle.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>

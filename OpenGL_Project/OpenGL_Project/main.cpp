@@ -213,7 +213,7 @@ int main()
 	terrain.setModel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Particle system
-	particleSystem = new ParticleSystem(&camera, program.Program_RenderParticle, program.Program_ComputeParticle, glm::vec3(0.0f, 5.0f, 0.0f));
+	particleSystem = new ParticleSystem(&camera, program.Program_RenderParticle, program.Program_ComputeParticle);
 
 	// Create mesh objects
 	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
@@ -605,6 +605,14 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	if (_key == GLFW_KEY_8 && _action == GLFW_PRESS)
 	{
 		enableSpotlight = !enableSpotlight; // Toggle spotlight
+	}
+	if (_key == GLFW_KEY_F && _action == GLFW_PRESS)
+	{
+		if (particleSystem)
+		{
+			particleSystem->SpawnFireworks(4); // Spawn at least 4 fireworks with randomized colors & trail times
+			std::cout << "Spawned 4 fireworks!" << std::endl;
+		}
 	}
 }
 
