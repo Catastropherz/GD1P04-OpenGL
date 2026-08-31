@@ -53,6 +53,14 @@ bool enablePointLight = true;
 bool enableDirectionalLight = true;
 bool enableSpotlight = true;
 
+enum class SceneState
+{
+	SCENE_POSTPROCESS, // Scene 1 
+	SCENE_PARTICLES    // Scene 2 
+};
+
+SceneState CurrentScene = SceneState::SCENE_POSTPROCESS;
+
 // For defining which mesh is a button and which mesh should switch texture
 Mesh* button = nullptr;
 Mesh* targetMeshForSwitchingTexture = nullptr;
@@ -317,13 +325,16 @@ void Render(Camera* _camera, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _mes
 	// Clear buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Render skybox first
-	_skybox->RenderSkybox(); // Uncomment to see skybox
-
-	// Render Terrain
-	if (_terrain != nullptr)
+	if (CurrentScene == SceneState::SCENE_POSTPROCESS)
 	{
-		_terrain->Render();
+		// Scene 1 Rendering logic
+		_skybox->RenderSkybox();
+		if (_terrain) _terrain->Render();
+	}
+	else if (CurrentScene == SceneState::SCENE_PARTICLES)
+	{
+		// Scene 2 Rendering logic
+		_skybox->RenderSkybox();
 	}
 
 	//// Render mesh objects
@@ -347,13 +358,6 @@ void Render(Camera* _camera, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _mes
 		 }
 	 }
 
-	 // If Perlin scene is loaded, render the three quads as UI overlays
-	 if (perlinSceneLoaded)
-	 {
-		 if (meshNoiseGrey) meshNoiseGrey->Render();
-		 if (meshNoiseGradient) meshNoiseGradient->Render();
-		 if (meshNoiseAnimated) meshNoiseAnimated->Render();
-	 }
 	 // Re-enable depth testing
 	 glEnable(GL_DEPTH_TEST);
 
@@ -576,13 +580,13 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	}
 	if (_key == GLFW_KEY_1 && _action == GLFW_PRESS)
 	{
-		// Request restoration of the original terrain (hide Perlin UI overlays)
-		restoreOriginalRequested = true;
+		CurrentScene = SceneState::SCENE_POSTPROCESS;
+		std::cout << "Switched to Scene 1: Post-Processing & Framebuffers" << std::endl;
 	}
 	if (_key == GLFW_KEY_2 && _action == GLFW_PRESS)
 	{
-		// Load Perlin noise scene when pressing '2'
-		perlinSceneRequested = true;
+		CurrentScene = SceneState::SCENE_PARTICLES;
+		std::cout << "Switched to Scene 2: Compute Shader Particles" << std::endl;
 	}
 	if (_key == GLFW_KEY_8 && _action == GLFW_PRESS)
 	{

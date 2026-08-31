@@ -48,6 +48,15 @@
     <ClCompile Include="PerlinNoise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PostProcessScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Texture.vert">
@@ -83,6 +92,21 @@
     <None Include="Resources\Shaders\terrain.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="ScreenQuad.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="PostProcess.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="ComputeParticles.comp">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Particle.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Particle.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderLoader.h">
@@ -113,6 +137,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PerlinNoise.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PostProcessScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

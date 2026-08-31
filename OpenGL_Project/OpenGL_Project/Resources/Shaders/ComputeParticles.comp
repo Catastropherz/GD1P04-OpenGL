@@ -1,0 +1,58 @@
+#version 460 core
+
+#define WORK_GROUP_SIZE_X 128 // Must match local work group size 
+
+layout (local_size_x = WORK_GROUP_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+// SSBO Buffers 
+layout(std430, binding = 0) buffer PositionLifeBuffer { vec4 PositionLife[]; }; 
+layout(std430, binding = 1) buffer VelocityBuffer     { vec4 Velocity[]; };     
+
+uniform vec4 VelocityLifeChange; 
+uniform vec3 EmitterOrigin;      // Spawn point 
+uniform int SeedLife;
+uniform int SeedX;
+uniform int SeedY;
+uniform int SeedZ;
+
+// Pseudo-Random Generator 
+double RandomValue(uint ID, int Seed)
+{
+    int Noise = int(ID) * Seed;
+    Noise = (Noise << 13) ^ Noise;
+    int T = (Noise * (Noise * Noise * 15731 + 789221) + 1376312589) & 0x7fffffff;
+    return 1.0 - double(T) * 0.93132257461548515625e-9;
+}
+
+void ResetParticle(uint Index)
+{
+    float LifeModifier = 5.0f; 
+    float Speed_XZ = 8.0f;     
+    float Speed_Y = 20.0f;     
+
+    PositionLife[Index] = vec4(EmitterOrigin.xyz,
+        (float(RandomValue(Index, SeedLife)) + 1.0f) * 0.5f * LifeModifier); 
+
+    Velocity[Index] = vec4(
+        Speed_XZ * float(RandomValue(Index, SeedX)),
+        Speed_Y * ((float(RandomValue(Index, SeedY)) + 1.0f) * 0.5f + 10.0f),
+        Speed_XZ * float(RandomValue(Index, SeedZ)),
+        0.0f
+    ); 
+}
+
+void main()
+{
+    uint Index = gl_GlobalInvocationID.x; 
+
+    // Apply linear acceleration/velocity update 
+    Velocity[Index].xyz += VelocityLifeChange.xyz;
+    PositionLife[Index].xyz += Velocity[Index].xyz * VelocityLifeChange.w;
+    PositionLife[Index].w -= VelocityLifeChange.w; // Reduce lifetime 
+
+    // Respawn if lifetime expires 
+    if (PositionLife[Index].w <= 0.0f)
+    {
+        ResetParticle(Index);
+    }
+}

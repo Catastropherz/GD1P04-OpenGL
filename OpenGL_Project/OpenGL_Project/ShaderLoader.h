@@ -22,12 +22,14 @@ class ShaderLoader
 	
 public:	
 	static GLuint CreateProgram(const char* VertexShaderFilename, const char* FragmentShaderFilename);
+	static GLuint CreateProgram_C(const char* ComputeShaderFilename);
 
 private:
 	ShaderLoader(void);
 	~ShaderLoader(void);
 	// Create a shader
 	static GLuint CreateShader(GLenum shaderType, const char* shaderName);
+
 
 	// Read a shader file and return the content as a string
 	static std::string ReadShaderFile(const char* filename);

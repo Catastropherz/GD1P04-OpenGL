@@ -17,7 +17,14 @@ Program::Program()
     Program_TextureUI = ShaderLoader::CreateProgram("Resources/Shaders/TextureUI.vert",
                                                     "Resources/Shaders/Texture.frag");
 	Program_TextureTerrain = ShaderLoader::CreateProgram("Resources/Shaders/terrain.vert",
-		                                                "Resources/Shaders/terrain.frag");
+		                                                "Resources/Shaders/terrain.frag"),
+    
+    Program_PostProcess = ShaderLoader::CreateProgram("Resources/Shaders/ScreenQuad.vert",
+                                                      "Resources/Shaders/PostProcess.frag");
+    Program_ComputeParticle = ShaderLoader::CreateProgram_C("Resources/Shaders/ComputeParticles.comp");
+
+    Program_RenderParticle = ShaderLoader::CreateProgram("Resources/Shaders/Particle.vert",
+                                                         "Resources/Shaders/Particle.frag");
 }
 
 Program::~Program()

@@ -32,6 +32,9 @@ public:
 	GLuint Program_TexReflectInstanced = 0;
 	GLuint Program_TextureUI = 0;
 	GLuint Program_TextureTerrain = 0;
+	GLuint Program_PostProcess = 0;     // Screen Quad Post-Processing (Scene 1)
+	GLuint Program_ComputeParticle = 0; // Compute Shader (Scene 2)
+	GLuint Program_RenderParticle = 0;  // Particle Point Rendering (Scene 2)
 
     Program();
     ~Program();
