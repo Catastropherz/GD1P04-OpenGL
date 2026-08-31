@@ -14,12 +14,14 @@
 #pragma once
 #include "Mesh_Terrain.h"
 #include "PerlinNoise.h"
+#include "Framebuffer.h"
+#include "ScreenQuad.h"
 
 
 GLFWwindow* Window = nullptr;
 
 void InitialSetup(Camera* _camera, int _windowWidth, int _windowHeight);
-void Render(Camera* _camera, SkyBox* _skybox , Mesh_Terrain* _terrain, Mesh* _meshArray[], int _meshCount,
+void Render(Camera* _camera, Program* program, float* _currentTime, SkyBox* _skybox , Mesh_Terrain* _terrain, Mesh* _meshArray[], int _meshCount,
 	Mesh* _UIArray[] = nullptr, int _UICount = 0);
 void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, float* _previousTime, float* _deltaTime, 
 	Mesh_Terrain* _terrain, Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[] = nullptr, int _UICount = 0);
@@ -53,6 +55,7 @@ bool enablePointLight = true;
 bool enableDirectionalLight = true;
 bool enableSpotlight = true;
 
+// Scenes
 enum class SceneState
 {
 	SCENE_POSTPROCESS, // Scene 1 
@@ -60,6 +63,12 @@ enum class SceneState
 };
 
 SceneState CurrentScene = SceneState::SCENE_POSTPROCESS;
+
+// Post-Processing
+Framebuffer* mainFBO = nullptr;
+ScreenQuad* screenQuad = nullptr;
+int PostProcessEffectMode = 0; // 0 = Normal, 1 = Invert, 2 = Grayscale, 3 = Rain
+const int MAX_POST_EFFECTS = 4;
 
 // For defining which mesh is a button and which mesh should switch texture
 Mesh* button = nullptr;
@@ -145,6 +154,10 @@ int main()
 
 	// Load and set up the objects ---------------------------------
 
+	// Screen
+	mainFBO = new Framebuffer(WindowWidth, WindowHeight);
+	screenQuad = new ScreenQuad();
+
 	// Skybox
 	std::string skyboxFaces[6] =
 	{
@@ -197,7 +210,7 @@ int main()
 
 	// Create mesh objects
 	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
-	meshBarrel.setModel(glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(20.0f, 20.0f, 20.0f), RotationAngle);
+	meshBarrel.setModel(glm::vec3(0.0f, 0.0f, 120.0f), glm::vec3(40.0f, 40.0f, 40.0f), RotationAngle);
 	meshBarrel.setProgram(&program.Program_TexLight);
 	meshBarrel.setTexture(&texture0);
 	meshBarrel.SetLightManager(&lightManager);
@@ -208,6 +221,13 @@ int main()
 	meshTree.setTexture(&texture0);
 	meshTree.setSecondTexture(&texture1);
 	meshTree.SetLightManager(&lightManager);
+
+	Mesh meshStatue("Resources/Models/SM_Env_Statue_04.obj");
+	meshStatue.setModel(glm::vec3(80.0f, 0.0f, 120.0f), glm::vec3(40.0f, 40.0f, 40.0f), RotationAngle);
+	meshStatue.setProgram(&program.Program_TexLight);
+	meshStatue.setTexture(&texture0);
+	meshStatue.setSecondTexture(&texture1);
+	meshStatue.SetLightManager(&lightManager);
 
 	Mesh meshGround(CUBE);
 	meshGround.setModel(glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(2000.0f, 1.0f, 2000.0f), RotationAngle);
@@ -227,7 +247,7 @@ int main()
 
 
 	Mesh meshBanner("Resources/Models/SM_Wep_Banner_05.obj");
-	meshBanner.setModel(glm::vec3(0.0f, -7.0f, 0.0f), glm::vec3(15.0f, 15.0f, 15.0f), RotationAngle);
+	meshBanner.setModel(glm::vec3(-80.0f, 0.0f, 150.0f), glm::vec3(40.0f, 40.0f, 40.0f), RotationAngle);
 	meshBanner.setProgram(&program.Program_TexReflect);
 	meshBanner.SetSkybox(&skybox, &texture0Map);
 	meshBanner.setTexture(&texture0);
@@ -243,7 +263,7 @@ int main()
 	button = &meshButton;
 
 	// Create an array containing all the mesh objects
-	Mesh* meshArray[] = { &meshGround };
+	Mesh* meshArray[] = { &meshBarrel, &meshBanner, &meshStatue };
 	Mesh* UIArray[] = { &meshButton };
 	int meshCount = sizeof(meshArray) / sizeof(meshArray[0]);
 	int UICount = sizeof(UIArray) / sizeof(UIArray[0]);
@@ -256,62 +276,14 @@ int main()
 		// Update all objects and run the processes
 		Update(&camera, &lightManager, &CurrentTime, &PreviousTime, &DeltaTime, &terrain, meshArray, meshCount, UIArray, UICount);
 
-		// If the user requested the Perlin scene (pressing '2'), create it now where we have access to 'program'
-		if (perlinSceneRequested)
-		{
-			// If already loaded, remove previous perlin UI quads so we can recreate with a new seed
-			if (perlinSceneLoaded)
-			{
-				if (meshNoiseGrey) { delete meshNoiseGrey; meshNoiseGrey = nullptr; }
-				if (meshNoiseGradient) { delete meshNoiseGradient; meshNoiseGradient = nullptr; }
-				if (meshNoiseAnimated) { delete meshNoiseAnimated; meshNoiseAnimated = nullptr; }
-				perlinSceneLoaded = false;
-			}
-
-			CreatePerlinScene(&program);
-			perlinSceneLoaded = true;
-			perlinSceneRequested = false;
-		}
-
-		// If user requested restoring original terrain (pressing '1') do it here
-		if (restoreOriginalRequested && globalTerrain != nullptr)
-		{
-			// Restore original heightmap
-			HeightMapInfo origInfo;
-			origInfo.FilePath = originalHeightmapPath;
-			origInfo.Width = originalHeightmapWidth;
-			origInfo.Depth = originalHeightmapDepth;
-			origInfo.CellSpacing = originalCellSpacing;
-
-			globalTerrain->LoadHeightMap(origInfo);
-			globalTerrain->SmoothHeights(origInfo);
-			globalTerrain->BuildVertexData(origInfo);
-			globalTerrain->GenerateNormals(origInfo);
-			globalTerrain->BuildIndexData(origInfo);
-			globalTerrain->SetupMesh();
-
-			// Re-attach shaders/textures/lights
-			globalTerrain->setProgram(&program.Program_TextureTerrain);
-			globalTerrain->setTexture1(&textureGrass);
-			globalTerrain->setTexture2(&textureGround);
-			globalTerrain->setTexture3(&textureStone);
-			globalTerrain->setTexture4(&textureSnow);
-			globalTerrain->SetLightManager(&lightManager);
-			globalTerrain->setModel(glm::vec3(0.0f, 0.0f, 0.0f));
-
-			// Delete Perlin UI quads and hide them
-			if (meshNoiseGrey) { delete meshNoiseGrey; meshNoiseGrey = nullptr; }
-			if (meshNoiseGradient) { delete meshNoiseGradient; meshNoiseGradient = nullptr; }
-			if (meshNoiseAnimated) { delete meshNoiseAnimated; meshNoiseAnimated = nullptr; }
-
-			perlinSceneLoaded = false;
-			restoreOriginalRequested = false;
-		}
-
 		// Render all objects
-		Render(&camera, &skybox, &terrain ,meshArray, meshCount, UIArray, UICount);
+		Render(&camera, &program, &CurrentTime, &skybox, &terrain ,meshArray, meshCount, UIArray, UICount);
 	}
 	// End of Main Loop ****************************************
+
+	// Clean up
+	delete mainFBO; 
+	delete screenQuad;
 
 	// Ensuring correct shutdown
 	glfwTerminate();
@@ -320,16 +292,37 @@ int main()
 }
 
 // Render function to render all objects
-void Render(Camera* _camera, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
+void Render(Camera* _camera, Program* program, float* _currentTime, SkyBox* _skybox, Mesh_Terrain* _terrain ,Mesh* _meshArray[], int _meshCount, Mesh* _UIArray[], int _UICount)
 {
 	// Clear buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (CurrentScene == SceneState::SCENE_POSTPROCESS)
 	{
-		// Scene 1 Rendering logic
+		// Bind FBO and render 3D scene off-screen
+		mainFBO->Bind();
+
+		// Render objects (Skybox, Terrain, Meshes)
 		_skybox->RenderSkybox();
 		if (_terrain) _terrain->Render();
+		if (_meshArray != nullptr)
+		{
+			for (int i = 0; i < _meshCount; ++i)
+			{
+				_meshArray[i]->Render();
+			}
+		}
+
+		// Unbind FBO
+		mainFBO->Unbind();
+
+		//  Draw full-screen quad with active post-processing effect
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST); // Disable depth test for 2D quad overlay
+
+		screenQuad->Render(program->Program_PostProcess, mainFBO->GetTextureID(), PostProcessEffectMode, *_currentTime, (float)WindowWidth, (float)WindowHeight);
+
+		glEnable(GL_DEPTH_TEST);
 	}
 	else if (CurrentScene == SceneState::SCENE_PARTICLES)
 	{
@@ -572,7 +565,8 @@ void KeyInput(GLFWwindow* _window, int _key, int _scancode, int _action, int _mo
 	}
 	if (_key == GLFW_KEY_TAB && _action == GLFW_PRESS) // Press Tab to toggle camera orbiting
 	{
-		enableOrbiting = !enableOrbiting;
+		PostProcessEffectMode = (PostProcessEffectMode + 1) % MAX_POST_EFFECTS;
+		std::cout << "Switched Post-Processing Mode to: " << PostProcessEffectMode << std::endl;
 	}
 	if (_key == GLFW_KEY_7 && _action == GLFW_PRESS)
 	{
