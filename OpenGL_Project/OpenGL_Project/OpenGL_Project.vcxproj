@@ -153,10 +153,10 @@
     <None Include="ComputeParticles.comp" />
     <None Include="Particle.frag" />
     <None Include="Particle.vert" />
-    <None Include="PostProcess.frag" />
     <None Include="Resources\Shaders\Lighting_BlinnPhong.frag" />
     <None Include="Resources\Shaders\Lighting_Reflect.frag" />
     <None Include="Resources\Shaders\PointLight.frag" />
+    <None Include="Resources\Shaders\PostProcess.frag" />
     <None Include="Resources\Shaders\Skybox.frag" />
     <None Include="Resources\Shaders\Skybox.vert" />
     <None Include="Resources\Shaders\terrain.frag" />

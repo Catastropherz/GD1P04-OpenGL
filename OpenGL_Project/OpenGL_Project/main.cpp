@@ -68,8 +68,8 @@ SceneState CurrentScene = SceneState::SCENE_POSTPROCESS;
 // Post-Processing
 Framebuffer* mainFBO = nullptr;
 ScreenQuad* screenQuad = nullptr;
-int PostProcessEffectMode = 0; // 0 = Normal, 1 = Invert, 2 = Grayscale, 3 = Rain
-const int MAX_POST_EFFECTS = 4;
+int PostProcessEffectMode = 0; // 0 = Normal, 1 = Invert, 2 = Grayscale, 3 = Rain, 4 = CRT
+const int MAX_POST_EFFECTS = 5;
 
 // Particles
 ParticleSystem* particleSystem = nullptr;

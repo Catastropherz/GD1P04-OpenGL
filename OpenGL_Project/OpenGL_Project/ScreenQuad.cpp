@@ -41,15 +41,21 @@ void ScreenQuad::Render(GLuint program, GLuint fboTextureID, int effectMode, flo
 {
     glUseProgram(program);
 
-    // Bind FBO texture
+    // Bind FBO texture to slot 0
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, fboTextureID);
-    glUniform1i(glGetUniformLocation(program, "screenTexture"), 0);
 
-    // Uniforms for ShaderToy post-processing effects
-    glUniform1i(glGetUniformLocation(program, "effectMode"), effectMode);
-    glUniform1f(glGetUniformLocation(program, "iTime"), currentTime);
-    glUniform2f(glGetUniformLocation(program, "iResolution"), width, height);
+    GLint locTexture = glGetUniformLocation(program, "screenTexture");
+    if (locTexture != -1) glUniform1i(locTexture, 0);
+
+    GLint locMode = glGetUniformLocation(program, "effectMode");
+    if (locMode != -1) glUniform1i(locMode, effectMode);
+
+    GLint locTime = glGetUniformLocation(program, "iTime");
+    if (locTime != -1) glUniform1f(locTime, currentTime);
+
+    GLint locRes = glGetUniformLocation(program, "iResolution");
+    if (locRes != -1) glUniform2f(locRes, width, height);
 
     // Render Quad
     glBindVertexArray(VAO);
