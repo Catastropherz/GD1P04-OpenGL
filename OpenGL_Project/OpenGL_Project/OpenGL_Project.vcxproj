@@ -141,10 +141,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Mesh_Terrain.cpp" />
-    <ClCompile Include="ParticleScene.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="PerlinNoise.cpp" />
-    <ClCompile Include="PostProcessScene.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="ScreenQuad.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
@@ -175,10 +173,8 @@
     <ClInclude Include="LightManager.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Mesh_Terrain.h" />
-    <ClInclude Include="ParticleScene.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="PerlinNoise.h" />
-    <ClInclude Include="PostProcessScene.h" />
     <ClInclude Include="Program.h" />
     <ClInclude Include="ScreenQuad.h" />
     <ClInclude Include="ShaderLoader.h" />

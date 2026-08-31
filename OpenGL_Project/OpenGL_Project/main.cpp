@@ -4,9 +4,9 @@
  Auckland
  New Zealand
  (c)
- 2024 Media Design School
+ 2025 Media Design School
  File Name : main.cpp
- Description : Problem_003_1
+ Description : Post Process and Particles
  Author : Q Sivakorn Tuangwilai
  Mail : sivakorn.tuangwilai@mds.ac.nz
  **************************************************************************/
@@ -16,6 +16,7 @@
 #include "PerlinNoise.h"
 #include "Framebuffer.h"
 #include "ScreenQuad.h"
+#include "ParticleSystem.h"
 
 
 GLFWwindow* Window = nullptr;
@@ -69,6 +70,9 @@ Framebuffer* mainFBO = nullptr;
 ScreenQuad* screenQuad = nullptr;
 int PostProcessEffectMode = 0; // 0 = Normal, 1 = Invert, 2 = Grayscale, 3 = Rain
 const int MAX_POST_EFFECTS = 4;
+
+// Particles
+ParticleSystem* particleSystem = nullptr;
 
 // For defining which mesh is a button and which mesh should switch texture
 Mesh* button = nullptr;
@@ -208,6 +212,9 @@ int main()
 	terrain.SetLightManager(&lightManager);
 	terrain.setModel(glm::vec3(0.0f, 0.0f, 0.0f));
 
+	// Particle system
+	particleSystem = new ParticleSystem(&camera, program.Program_RenderParticle, program.Program_ComputeParticle, glm::vec3(0.0f, 5.0f, 0.0f));
+
 	// Create mesh objects
 	Mesh meshBarrel("Resources/Models/SM_Prop_Barrel_01.obj");
 	meshBarrel.setModel(glm::vec3(0.0f, 0.0f, 120.0f), glm::vec3(40.0f, 40.0f, 40.0f), RotationAngle);
@@ -284,6 +291,7 @@ int main()
 	// Clean up
 	delete mainFBO; 
 	delete screenQuad;
+	delete particleSystem;
 
 	// Ensuring correct shutdown
 	glfwTerminate();
@@ -326,8 +334,15 @@ void Render(Camera* _camera, Program* program, float* _currentTime, SkyBox* _sky
 	}
 	else if (CurrentScene == SceneState::SCENE_PARTICLES)
 	{
-		// Scene 2 Rendering logic
+		// Render Skybox & Terrain background
 		_skybox->RenderSkybox();
+		if (_terrain) _terrain->Render();
+
+		// Render Particle System
+		if (particleSystem)
+		{
+			particleSystem->Render();
+		}
 	}
 
 	//// Render mesh objects
@@ -430,6 +445,11 @@ void Update(Camera* _camera, LightManager* _lightManager, float* _currentTime, f
 	*_currentTime = (float)glfwGetTime();
 	*_deltaTime = *_currentTime - *_previousTime;
 	*_previousTime = *_currentTime;
+
+	if (CurrentScene == SceneState::SCENE_PARTICLES && particleSystem)
+	{
+		particleSystem->Update(*_deltaTime);
+	}
 
 	// Process input
 	ProcessInput(*_deltaTime, _camera, _meshArray[0]);
